@@ -1,0 +1,8 @@
+{
+  "name": "DzPrint Custom Printing",
+  "description": "Full-stack custom printing e-commerce platform in Algeria with custom product designer, multiple delivery agencies, Wilaya-specific rates, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
