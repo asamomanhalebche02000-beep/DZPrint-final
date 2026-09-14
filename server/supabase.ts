@@ -98,3 +98,106 @@ export async function uploadDesignToSupabaseStorage(
     storagePath: data.path,
   };
 }
+
+/**
+ * Upload store branding asset (Logo / Favicon) to Supabase Storage
+ * Uses 'store-assets' public bucket with graceful fallback to customer-designs or data URL
+ */
+export async function uploadStoreAssetToSupabaseStorage(
+  fileBuffer: Buffer,
+  fileName: string,
+  mimeType: string,
+  assetType: 'logo' | 'favicon'
+): Promise<{ success: boolean; url?: string; storagePath?: string; error?: string }> {
+  const client = getServerSupabase();
+  const bucketName = 'store-assets';
+
+  if (!client) {
+    // If Supabase credentials are not yet configured in .env,
+    // generate a data URL fallback so local admin preview and testing works seamlessly
+    const base64Data = fileBuffer.toString('base64');
+    const fallbackUrl = `data:${mimeType};base64,${base64Data}`;
+    return {
+      success: true,
+      url: fallbackUrl,
+      storagePath: `local-${assetType}-${Date.now()}`,
+    };
+  }
+
+  // Make sure store-assets public bucket exists or create it
+  try {
+    const { data: buckets } = await client.storage.listBuckets();
+    const exists = buckets?.some(b => b.name === bucketName);
+    if (!exists) {
+      await client.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 5 * 1024 * 1024,
+        allowedMimeTypes: [
+          'image/png',
+          'image/jpeg',
+          'image/jpg',
+          'image/webp',
+          'image/svg+xml',
+          'image/x-icon',
+          'image/vnd.microsoft.icon',
+        ],
+      });
+    }
+  } catch (err: any) {
+    console.warn('[Supabase Storage store-assets bucket check]:', err.message);
+  }
+
+  // Generate clean asset file name
+  const rawExt = fileName.split('.').pop()?.toLowerCase();
+  const ext = rawExt || (assetType === 'favicon' ? 'ico' : 'png');
+  const cleanId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  const storagePath = `branding/${assetType}-${cleanId}.${ext}`;
+
+  // Try upload to store-assets
+  const { data, error } = await client.storage
+    .from(bucketName)
+    .upload(storagePath, fileBuffer, {
+      contentType: mimeType,
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+  if (error) {
+    // Fallback: try existing customer-designs bucket
+    try {
+      const fallbackUpload = await client.storage
+        .from('customer-designs')
+        .upload(storagePath, fileBuffer, {
+          contentType: mimeType,
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (!fallbackUpload.error && fallbackUpload.data) {
+        const { data: publicData } = client.storage
+          .from('customer-designs')
+          .getPublicUrl(storagePath);
+        return {
+          success: true,
+          url: publicData.publicUrl,
+          storagePath: fallbackUpload.data.path,
+        };
+      }
+    } catch {
+      // ignore
+    }
+
+    console.error('[Supabase Storage Store Asset Upload Error]:', error);
+    return { success: false, error: error.message };
+  }
+
+  // Get public CDN URL
+  const { data: publicData } = client.storage.from(bucketName).getPublicUrl(storagePath);
+
+  return {
+    success: true,
+    url: publicData.publicUrl,
+    storagePath: data.path,
+  };
+}
+

@@ -3,7 +3,11 @@ import path from 'path';
 import multer from 'multer';
 import { createServer as createViteServer } from 'vite';
 import { Database } from './server/db';
-import { getServerSupabase, uploadDesignToSupabaseStorage } from './server/supabase';
+import {
+  getServerSupabase,
+  uploadDesignToSupabaseStorage,
+  uploadStoreAssetToSupabaseStorage,
+} from './server/supabase';
 import { sendOrderNotificationEmails } from './server/email';
 import {
   syncOrderToGoogleSheet,
@@ -11,16 +15,16 @@ import {
   testGoogleSheetWebhook,
   generateOrdersGoogleSheetsCsv,
 } from './server/googleSheet';
-import { Order, OrderItem, OrderStatus, QuoteCalculationRequest } from './src/types';
+import { Order, OrderItem, OrderStatus, QuoteCalculationRequest, SiteSettings } from './src/types';
 
-const app = express();
+export const app = express();
 const PORT = 3000;
 
 // Body parsing with safe size limit
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Multer memory storage (ZERO disk writes for 100% Vercel Serverless compatibility)
+// Multer memory storage for customer designs (ZERO disk writes for 100% Vercel Serverless compatibility)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -30,6 +34,39 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error('صيغة الملف غير مدعومة. يرجى رفع صورة PNG أو JPG أو WEBP فقط.'));
+    }
+  },
+});
+
+// Multer memory storage for branding assets (Logo, Favicon, Icons)
+const assetUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedMime = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+      'image/svg+xml',
+      'image/x-icon',
+      'image/vnd.microsoft.icon',
+      'image/ico',
+      'image/x-ico',
+    ];
+    const lowerName = file.originalname.toLowerCase();
+    if (
+      allowedMime.includes(file.mimetype) ||
+      lowerName.endsWith('.ico') ||
+      lowerName.endsWith('.svg') ||
+      lowerName.endsWith('.png') ||
+      lowerName.endsWith('.jpg') ||
+      lowerName.endsWith('.jpeg') ||
+      lowerName.endsWith('.webp')
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error('صيغة الملف غير مدعومة. يرجى رفع صورة PNG أو JPG أو SVG أو WEBP أو ICO'));
     }
   },
 });
@@ -587,7 +624,47 @@ app.get('/api/orders/track', async (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await Database.getSettings();
-    res.json(settings);
+    // Return public store settings; keep sensitive administrative secrets protected
+    const publicSettings = {
+      business_name: settings.business_name,
+      business_name_ar: settings.business_name_ar,
+      store_name: settings.store_name || settings.business_name_ar || settings.business_name,
+      store_description: settings.store_description,
+      store_description_ar: settings.store_description_ar,
+      logo_url: settings.logo_url || '',
+      favicon_url: settings.favicon_url || '',
+      phone: settings.phone,
+      whatsapp: settings.whatsapp,
+      whatsapp_phone: settings.whatsapp_phone,
+      order_number_prefix: settings.order_number_prefix,
+      email: settings.email,
+      address: settings.address,
+      working_hours: settings.working_hours,
+      facebook: settings.facebook,
+      facebook_url: settings.facebook_url,
+      instagram: settings.instagram,
+      instagram_url: settings.instagram_url,
+      tiktok: settings.tiktok,
+      tiktok_url: settings.tiktok_url,
+      youtube_url: settings.youtube_url,
+      telegram_url: settings.telegram_url,
+      currency: settings.currency,
+      order_prefix: settings.order_prefix,
+      free_delivery_threshold: settings.free_delivery_threshold,
+      meta_pixel_id: settings.meta_pixel_id,
+      meta_pixel_enabled: settings.meta_pixel_enabled,
+      hero_headline: settings.hero_headline,
+      hero_headline_highlight: settings.hero_headline_highlight,
+      hero_headline_color: settings.hero_headline_color,
+      hero_headline_font: settings.hero_headline_font,
+      hero_subheadline: settings.hero_subheadline,
+      hero_subheadline_color: settings.hero_subheadline_color,
+      hero_badge_text: settings.hero_badge_text,
+      hero_badge_color: settings.hero_badge_color,
+      hero_start_btn_text: settings.hero_start_btn_text,
+      hero_catalog_btn_text: settings.hero_catalog_btn_text,
+    };
+    res.json(publicSettings);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -892,6 +969,58 @@ app.post('/api/admin/settings', requireAdminAuth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Admin Asset Upload (Store Logo, Favicon) with Supabase Storage integration
+app.post(
+  '/api/admin/upload-asset',
+  requireAdminAuth,
+  assetUpload.single('file'),
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'لم يتم استلام أي ملف للرفع' });
+      }
+
+      const assetType = req.body.asset_type === 'favicon' ? 'favicon' : 'logo';
+      const file = req.file;
+
+      const result = await uploadStoreAssetToSupabaseStorage(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        assetType
+      );
+
+      if (!result.success || !result.url) {
+        return res.status(500).json({
+          error: result.error || 'فشل رفع الملف إلى Supabase Storage. يرجى المحاولة مرة أخرى.',
+        });
+      }
+
+      // Auto update the setting in the database immediately if auto_save is true
+      if (req.body.auto_save === 'true' || req.body.auto_save === true) {
+        const updatePayload: Partial<SiteSettings> = {};
+        if (assetType === 'logo') {
+          updatePayload.logo_url = result.url;
+        } else {
+          updatePayload.favicon_url = result.url;
+        }
+        await Database.updateSettings(updatePayload);
+      }
+
+      res.json({
+        success: true,
+        url: result.url,
+        storagePath: result.storagePath,
+        assetType,
+        filename: file.originalname,
+      });
+    } catch (err: any) {
+      console.error('[Upload Asset Endpoint Error]:', err);
+      res.status(500).json({ error: err.message || 'حدث خطأ أثناء معالجة رفع الملف' });
+    }
+  }
+);
 
 app.get('/api/admin/cms', requireAdminAuth, async (req, res) => {
   try {
@@ -1381,7 +1510,6 @@ app.post('/api/admin/invoices/from-order/:orderId', requireAdminAuth, async (req
 // VERCEL & SERVER STARTUP
 // ==========================================
 export default app;
-export { app };
 
 async function startServer() {
   await Database.init();

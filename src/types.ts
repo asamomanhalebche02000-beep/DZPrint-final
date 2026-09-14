@@ -213,6 +213,9 @@ export interface Coupon {
 export interface SiteSettings {
   business_name: string;
   business_name_ar: string;
+  store_name?: string;
+  store_description?: string;
+  store_description_ar?: string;
   logo_url: string;
   favicon_url?: string;
   phone: string;
@@ -221,11 +224,15 @@ export interface SiteSettings {
   order_number_prefix?: string;
   email: string;
   address: string;
+  working_hours?: string;
   facebook: string;
   facebook_url?: string;
   instagram: string;
   instagram_url?: string;
   tiktok: string;
+  tiktok_url?: string;
+  youtube_url?: string;
+  telegram_url?: string;
   currency: string;
   order_prefix: string;
   free_delivery_threshold: number;

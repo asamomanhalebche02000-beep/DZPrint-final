@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
+import { useSiteSettings } from '../context/SettingsContext';
 import { Language } from '../types';
 
 interface NavbarProps {
@@ -28,7 +29,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { theme, toggleTheme, language, setLanguage, t, isRtl } = useTheme();
   const { cartCount, setIsCartOpen } = useCart();
+  const { settings } = useSiteSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [logoLoadError, setLogoLoadError] = React.useState(false);
+
+  React.useEffect(() => {
+    setLogoLoadError(false);
+  }, [settings?.logo_url]);
 
   const navItems = [
     { id: 'shop', label: t.nav_shop },
@@ -47,28 +54,40 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const storeName = settings?.business_name_ar || settings?.store_name || settings?.business_name || 'DzPrint';
+  const storeTagline = settings?.store_description_ar || settings?.store_description || 'ورشة الطباعة المخصصة';
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Brand Logo */}
+        {/* Dynamic Brand Logo */}
         <div
           onClick={() => onNavigate('shop')}
           className="flex items-center gap-2.5 cursor-pointer select-none group"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5" />
-          </div>
+          {settings?.logo_url && !logoLoadError ? (
+            <img
+              src={settings.logo_url}
+              alt={storeName}
+              onError={() => setLogoLoadError(true)}
+              className="h-10 max-h-10 w-auto max-w-[130px] object-contain rounded-xl shadow-xs group-hover:scale-105 transition-transform"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-5 h-5" />
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-lg font-black tracking-tight text-neutral-900 dark:text-white">
-                DzPrint
+              <span className="text-lg font-black tracking-tight text-neutral-900 dark:text-white line-clamp-1">
+                {storeName}
               </span>
-              <span className="px-1.5 py-0.2 text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded">
+              <span className="px-1.5 py-0.2 text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded shrink-0">
                 الجزائر
               </span>
             </div>
-            <p className="text-[10px] text-neutral-400 font-medium leading-none -mt-0.5">
-              ورشة الطباعة المخصصة
+            <p className="text-[10px] text-neutral-400 font-medium leading-none -mt-0.5 line-clamp-1">
+              {storeTagline}
             </p>
           </div>
         </div>

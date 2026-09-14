@@ -23,10 +23,12 @@ import {
   Sliders,
   Code2,
   HelpCircle,
+  Store,
 } from 'lucide-react';
 import { SiteSettings } from '../../types';
 import { adminFetch, getAdminToken } from '../../lib/adminAuth';
 import { useSiteSettings } from '../../context/SettingsContext';
+import { AdminStoreSettings } from './AdminStoreSettings';
 
 const ARABIC_FONTS = [
   { id: 'Cairo', name: 'خط القاهرة (Cairo)', desc: 'خط قياسي متوازن وعصري' },
@@ -49,7 +51,7 @@ const PRESET_COLORS = [
 export const AdminSettings: React.FC = () => {
   const { updateLocalSettings, refreshSettings } = useSiteSettings();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'marketing' | 'homepage' | 'general'>('marketing');
+  const [activeSubTab, setActiveSubTab] = useState<'store' | 'marketing' | 'homepage'>('store');
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -64,22 +66,38 @@ export const AdminSettings: React.FC = () => {
   const [scriptCopied, setScriptCopied] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then(res => res.json())
+    adminFetch('/api/admin/settings')
+      .then(async res => {
+        if (!res.ok) {
+          const fallbackRes = await fetch('/api/settings');
+          return fallbackRes.json();
+        }
+        return res.json();
+      })
       .then(data => {
         setSettings({
           business_name: 'DZPrint Custom Printing',
           business_name_ar: 'ديزاد برينت للطباعة المخصصة',
+          store_name: 'ديزاد برينت للطباعة المخصصة',
+          store_description: 'المنصة الجزائرية الرائدة في تصميم وطباعة التيشرتات والهوديز والمجات المخصصة بأعلى معايير الجودة والتوصيل السريع لـ 58 ولاية.',
+          store_description_ar: 'المنصة الجزائرية الرائدة في تصميم وطباعة التيشرتات والهوديز والمجات المخصصة بأعلى معايير الجودة والتوصيل السريع لـ 58 ولاية.',
           logo_url: '',
+          favicon_url: '',
           phone: '0550 12 34 56',
           whatsapp: '+213550123456',
           whatsapp_phone: '0550123456',
           order_number_prefix: 'DZP',
           email: 'contact@dzprint.dz',
           address: 'الجزائر العاصمة',
+          working_hours: 'السبت - الخميس: 9:00 صباحاً - 6:00 مساءً',
           facebook: '',
+          facebook_url: '',
           instagram: '',
+          instagram_url: '',
           tiktok: '',
+          tiktok_url: '',
+          telegram_url: '',
+          youtube_url: '',
           currency: 'د.ج',
           order_prefix: 'DZP',
           free_delivery_threshold: 12000,
@@ -291,6 +309,19 @@ function appendOrderRow(sheet, o) {
       <div className="flex items-center gap-1.5 p-1.5 bg-neutral-100 dark:bg-neutral-800/80 rounded-2xl border border-neutral-200 dark:border-neutral-700/60 text-xs">
         <button
           type="button"
+          onClick={() => setActiveSubTab('store')}
+          className={`flex-1 py-2.5 px-3 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+            activeSubTab === 'store'
+              ? 'bg-white dark:bg-neutral-900 text-amber-600 dark:text-amber-400 shadow-xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+          }`}
+        >
+          <Store className="w-4 h-4" />
+          <span>إعدادات وهوية المتجر (Store Branding)</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveSubTab('marketing')}
           className={`flex-1 py-2.5 px-3 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
             activeSubTab === 'marketing'
@@ -313,19 +344,6 @@ function appendOrderRow(sheet, o) {
         >
           <Palette className="w-4 h-4" />
           <span>نصوص وألوان وخطوط الواجهة</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('general')}
-          className={`flex-1 py-2.5 px-3 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
-            activeSubTab === 'general'
-              ? 'bg-white dark:bg-neutral-900 text-amber-600 dark:text-amber-400 shadow-xs'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Sliders className="w-4 h-4" />
-          <span>بيانات المتجر والتواصل</span>
         </button>
       </div>
 
@@ -820,140 +838,15 @@ function appendOrderRow(sheet, o) {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: GENERAL STORE & CONTACT INFO */}
+      {/* TAB 1: STORE SETTINGS & BRANDING (LOGO, FAVICON, CONTACT, SOCIAL) */}
       {/* ========================================================================= */}
-      {activeSubTab === 'general' && (
-        <div className="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs space-y-5 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold">
-                اسم المتجر / الورشة (العربية)
-              </label>
-              <input
-                type="text"
-                value={settings.business_name_ar || ''}
-                onChange={e => setSettings({ ...settings, business_name_ar: e.target.value })}
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold">
-                بادئة أرقام الطلبيات (Order Prefix)
-              </label>
-              <input
-                type="text"
-                value={settings.order_number_prefix || settings.order_prefix || 'DZP'}
-                onChange={e =>
-                  setSettings({
-                    ...settings,
-                    order_number_prefix: e.target.value,
-                    order_prefix: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5 text-amber-500" />
-                هاتف خدمة الزبائن
-              </label>
-              <input
-                type="text"
-                value={settings.phone || ''}
-                onChange={e => setSettings({ ...settings, phone: e.target.value })}
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold flex items-center gap-1">
-                <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
-                رقم الواتساب WhatsApp
-              </label>
-              <input
-                type="text"
-                value={settings.whatsapp_phone || settings.whatsapp || ''}
-                onChange={e =>
-                  setSettings({
-                    ...settings,
-                    whatsapp_phone: e.target.value,
-                    whatsapp: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-blue-500" />
-                البريد الإلكتروني للطلبات
-              </label>
-              <input
-                type="email"
-                value={settings.email || ''}
-                onChange={e => setSettings({ ...settings, email: e.target.value })}
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-red-500" />
-              عنوان الورشة والمقر الفعلي في الجزائر
-            </label>
-            <input
-              type="text"
-              value={settings.address || ''}
-              onChange={e => setSettings({ ...settings, address: e.target.value })}
-              className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold">
-                رابط صفحة إنستغرام Instagram
-              </label>
-              <input
-                type="text"
-                value={settings.instagram_url || settings.instagram || ''}
-                onChange={e =>
-                  setSettings({
-                    ...settings,
-                    instagram_url: e.target.value,
-                    instagram: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-neutral-600 dark:text-neutral-400 mb-1 font-bold">
-                رابط صفحة فيسبوك Facebook
-              </label>
-              <input
-                type="text"
-                value={settings.facebook_url || settings.facebook || ''}
-                onChange={e =>
-                  setSettings({
-                    ...settings,
-                    facebook_url: e.target.value,
-                    facebook: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
-              />
-            </div>
-          </div>
-        </div>
+      {activeSubTab === 'store' && (
+        <AdminStoreSettings
+          settings={settings}
+          setSettings={setSettings}
+          onSave={handleSave}
+          isSaving={isSaving}
+        />
       )}
 
       {/* Bottom Save Bar */}

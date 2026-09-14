@@ -492,19 +492,26 @@ export const INITIAL_COUPONS: Coupon[] = [
 export const INITIAL_SETTINGS: SiteSettings = {
   business_name: 'DZPrint Custom Printing',
   business_name_ar: 'ديزاد برينت للطباعة المخصصة',
-  logo_url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=120&auto=format&fit=crop&q=80',
-  favicon_url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=64&auto=format&fit=crop&q=80',
+  store_name: 'ديزاد برينت | DZPrint',
+  store_description: 'Custom printing platform for apparel and merchandise in Algeria with 58-Wilaya delivery',
+  store_description_ar: 'المنصة الجزائرية الأولى في تصميم وطباعة التيشرتات والهوديز والمجات المخصصة بأعلى معايير الجودة والتوصيل لـ 58 ولاية',
+  logo_url: '',
+  favicon_url: '',
   phone: '0550 12 34 56',
   whatsapp: '+213550123456',
   whatsapp_phone: '0550123456',
   order_number_prefix: 'DZP',
   email: 'contact@dzprint.dz',
   address: 'الجزائر العاصمة، بئر مراد رايس / ورشة الطباعة بالبليدة',
+  working_hours: 'السبت - الخميس: 09:00 - 18:00',
   facebook: 'https://facebook.com/dzprint',
   facebook_url: 'https://facebook.com/dzprint',
   instagram: 'https://instagram.com/dzprint',
   instagram_url: 'https://instagram.com/dzprint',
   tiktok: 'https://tiktok.com/@dzprint',
+  tiktok_url: 'https://tiktok.com/@dzprint',
+  youtube_url: '',
+  telegram_url: 'https://t.me/dzprint',
   currency: 'د.ج',
   order_prefix: 'DZP',
   free_delivery_threshold: 12000,
@@ -1670,7 +1677,19 @@ export class Database {
           .select('*')
           .eq('id', 'main_settings')
           .maybeSingle();
-        if (!error && data) return data;
+        if (!error && data) {
+          const merged: SiteSettings = {
+            ...memoryStore.settings,
+            ...data,
+            store_name: data.store_name || data.business_name_ar || data.business_name || memoryStore.settings.store_name,
+            business_name: data.business_name || data.store_name || memoryStore.settings.business_name,
+            business_name_ar: data.business_name_ar || data.store_name || memoryStore.settings.business_name_ar,
+            store_description: data.store_description || memoryStore.settings.store_description,
+            store_description_ar: data.store_description_ar || memoryStore.settings.store_description_ar,
+          };
+          memoryStore.settings = merged;
+          return merged;
+        }
       } catch (err: any) {
         console.warn('[Supabase getSettings fallback]:', err.message);
       }
@@ -1682,12 +1701,26 @@ export class Database {
     const client = getServerSupabase();
     if (client) {
       try {
+        const payload: Record<string, any> = {
+          id: 'main_settings',
+          ...data,
+          updated_at: new Date().toISOString(),
+        };
+        if (data.business_name_ar || data.business_name) {
+          payload.store_name = data.business_name_ar || data.business_name;
+        }
+
         const { data: updated, error } = await client
           .from('site_settings')
-          .upsert({ id: 'main_settings', ...data })
+          .upsert(payload)
           .select()
           .single();
-        if (!error && updated) return updated;
+        if (!error && updated) {
+          memoryStore.settings = { ...memoryStore.settings, ...updated };
+          return memoryStore.settings;
+        } else if (error) {
+          console.warn('[Supabase updateSettings warning, updating memoryStore]:', error.message);
+        }
       } catch (err: any) {
         console.warn('[Supabase updateSettings fallback]:', err.message);
       }
