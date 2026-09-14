@@ -37,6 +37,81 @@ export interface DeliveryRate {
 
 export type ProductCategory = 't-shirts' | 'hoodies' | 'mugs' | 'totebags' | 'caps';
 
+export interface Store {
+  id: string;
+  owner_id: string;
+  slug: string;
+  name: string;
+  logo?: string;
+  favicon?: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  address: string;
+  description: string;
+  default_language: Language;
+  supported_languages: Language[];
+  created_at: string;
+  updated_at: string;
+}
+
+export type LandingSectionType =
+  | 'hero'
+  | 'featured_products'
+  | 'categories'
+  | 'promo_banner'
+  | 'about'
+  | 'services'
+  | 'testimonials'
+  | 'faq'
+  | 'contact'
+  | 'custom_text_image'
+  | 'cta';
+
+export interface LandingSection {
+  id: string;
+  store_id: string;
+  type: LandingSectionType;
+  sort_order: number;
+  is_visible: boolean;
+  content: {
+    title_ar?: string;
+    title_fr?: string;
+    title_en?: string;
+    subtitle_ar?: string;
+    subtitle_fr?: string;
+    subtitle_en?: string;
+    badge_ar?: string;
+    badge_fr?: string;
+    badge_en?: string;
+    btn_text_ar?: string;
+    btn_text_fr?: string;
+    btn_text_en?: string;
+    btn_link?: string;
+    secondary_btn_text_ar?: string;
+    secondary_btn_text_fr?: string;
+    secondary_btn_text_en?: string;
+    secondary_btn_link?: string;
+    image_url?: string;
+    bg_color?: string;
+    text_color?: string;
+    discount_code?: string;
+    discount_percent?: number;
+    items?: any[];
+    [key: string]: any;
+  };
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LandingPageData {
+  store_id: string;
+  draft_sections: LandingSection[];
+  published_sections: LandingSection[];
+  published_at?: string | null;
+  updated_at?: string;
+}
+
 export interface ProductVariant {
   id: string;
   product_id: string;
@@ -50,13 +125,16 @@ export interface ProductVariant {
 
 export interface Product {
   id: string;
+  store_id?: string;
   name: string;
   name_ar?: string;
   name_fr?: string;
+  name_en?: string;
   slug: string;
   description: string;
   description_ar?: string;
   description_fr?: string;
+  description_en?: string;
   category: ProductCategory;
   sku: string;
   base_price: number;
@@ -211,11 +289,22 @@ export interface Coupon {
 }
 
 export interface SiteSettings {
+  store_id?: string;
   business_name: string;
   business_name_ar: string;
+  business_name_fr?: string;
+  business_name_en?: string;
   store_name?: string;
+  store_name_ar?: string;
+  store_name_fr?: string;
+  store_name_en?: string;
   store_description?: string;
   store_description_ar?: string;
+  store_description_fr?: string;
+  store_description_en?: string;
+  about_text_ar?: string;
+  about_text_fr?: string;
+  about_text_en?: string;
   logo_url: string;
   favicon_url?: string;
   phone: string;

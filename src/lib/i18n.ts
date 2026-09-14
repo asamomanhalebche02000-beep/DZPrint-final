@@ -153,6 +153,93 @@ export interface Translations {
   print_order: string;
   download_design: string;
 
+  // Admin Navigation Tabs
+  admin_tab_orders: string;
+  admin_tab_production: string;
+  admin_tab_inventory: string;
+  admin_tab_customers: string;
+  admin_tab_invoices: string;
+  admin_tab_delivery: string;
+  admin_tab_products: string;
+  admin_tab_designs: string;
+  admin_tab_coupons: string;
+  admin_tab_analytics: string;
+  admin_tab_landing_builder: string;
+  admin_tab_settings: string;
+  admin_tab_translations: string;
+
+  // Landing Page Builder
+  landing_builder_title: string;
+  landing_builder_subtitle: string;
+  landing_save_draft: string;
+  landing_publish: string;
+  landing_published_badge: string;
+  landing_draft_badge: string;
+  landing_add_section: string;
+  landing_preview_desktop: string;
+  landing_preview_tablet: string;
+  landing_preview_mobile: string;
+  landing_move_up: string;
+  landing_move_down: string;
+  landing_hide_section: string;
+  landing_show_section: string;
+  landing_duplicate_section: string;
+  landing_delete_section: string;
+  landing_edit_section: string;
+  landing_preview_mode: string;
+  landing_editor_mode: string;
+  landing_draft_saved: string;
+  landing_published_success: string;
+  landing_section_type_hero: string;
+  landing_section_type_featured_products: string;
+  landing_section_type_categories: string;
+  landing_section_type_promo_banner: string;
+  landing_section_type_about: string;
+  landing_section_type_services: string;
+  landing_section_type_testimonials: string;
+  landing_section_type_faq: string;
+  landing_section_type_contact: string;
+  landing_section_type_custom_text_image: string;
+  landing_section_type_cta: string;
+
+  // Product Images & Media
+  product_images: string;
+  product_upload_images: string;
+  product_drop_images: string;
+  product_primary_image: string;
+  product_set_primary: string;
+  product_remove_image: string;
+  product_replace_image: string;
+  product_uploading: string;
+  product_name_ar: string;
+  product_name_fr: string;
+  product_name_en: string;
+  product_desc_ar: string;
+  product_desc_fr: string;
+  product_desc_en: string;
+
+  // Content & Translations Management
+  translations_title: string;
+  translations_subtitle: string;
+  trans_store_name: string;
+  trans_store_desc: string;
+  trans_hero_headline: string;
+  trans_hero_subheadline: string;
+  trans_hero_cta: string;
+  trans_about: string;
+  trans_faq: string;
+  trans_categories: string;
+  trans_save_success: string;
+  trans_tab_ar: string;
+  trans_tab_fr: string;
+  trans_tab_en: string;
+
+  // Multi-Store
+  store_selector: string;
+  store_main: string;
+  store_isolated_note: string;
+  store_create_new: string;
+
   // General
   currency: string;
   contact_whatsapp: string;
@@ -304,6 +391,93 @@ export const translations: Record<Language, Translations> = {
     print_order: 'طباعة وصل الطلب',
     download_design: 'تحميل تصميم العميل',
 
+    // Admin Tabs
+    admin_tab_orders: 'الطلبات',
+    admin_tab_production: 'الإنتاج والطباعة',
+    admin_tab_inventory: 'المخزون والمواد',
+    admin_tab_customers: 'الزبائن (CRM)',
+    admin_tab_invoices: 'الفواتير والطلبيات',
+    admin_tab_delivery: 'شركات التوصيل',
+    admin_tab_products: 'المنتجات',
+    admin_tab_designs: 'التصاميم',
+    admin_tab_coupons: 'الكوبونات',
+    admin_tab_analytics: 'الإحصائيات',
+    admin_tab_landing_builder: 'منشئ الصفحة الرئيسية',
+    admin_tab_settings: 'الإعدادات العامة',
+    admin_tab_translations: 'اللغات والترجمات',
+
+    // Landing Builder
+    landing_builder_title: 'منشئ وتخصيص الصفحة الرئيسية',
+    landing_builder_subtitle: 'تحكم بأقسام صفحة متجرك وترتيبها ومحتواها بثلاث لغات، مع حفظ المسودات والنشر الفوري',
+    landing_save_draft: 'حفظ كمسودة',
+    landing_publish: 'نشر الصفحة على المتجر',
+    landing_published_badge: 'نسخة منشورة ومفعلة',
+    landing_draft_badge: 'مسودة قيد التعديل',
+    landing_add_section: 'إضافة قسم جديد',
+    landing_preview_desktop: 'حاسوب',
+    landing_preview_tablet: 'جهاز لوحي',
+    landing_preview_mobile: 'هاتف محمول',
+    landing_move_up: 'تحريك لأعلى',
+    landing_move_down: 'تحريك لأسفل',
+    landing_hide_section: 'إخفاء القسم',
+    landing_show_section: 'إظهار القسم',
+    landing_duplicate_section: 'تكرار القسم',
+    landing_delete_section: 'حذف القسم',
+    landing_edit_section: 'تعديل المحتوى والخيارات',
+    landing_preview_mode: 'معاينة حية',
+    landing_editor_mode: 'تعديل الأقسام',
+    landing_draft_saved: 'تم حفظ المسودة بنجاح',
+    landing_published_success: 'تم نشر التعديلات بنجاح على المتجر مباشرة!',
+    landing_section_type_hero: 'واجهة البداية (Hero Banner)',
+    landing_section_type_featured_products: 'المنتجات المميزة',
+    landing_section_type_categories: 'تصنيفات المنتجات',
+    landing_section_type_promo_banner: 'شريط ترويجي وكوبونات',
+    landing_section_type_about: 'من نحن وقصة الورشة',
+    landing_section_type_services: 'الميزات وضمانات الجودة',
+    landing_section_type_testimonials: 'آراء وتقييمات العملاء',
+    landing_section_type_faq: 'الأسئلة الشائعة والأجوبة',
+    landing_section_type_contact: 'معلومات الاتصال وخريطة الولايات',
+    landing_section_type_custom_text_image: 'نص مخصص وصورة جانبية',
+    landing_section_type_cta: 'شريط الحث على الشراء (CTA)',
+
+    // Product Images
+    product_images: 'صور المنتج',
+    product_upload_images: 'رفع صور من الجهاز',
+    product_drop_images: 'اسحب الصور هنا أو انقر للاختيار من جهازك',
+    product_primary_image: 'الصورة الرئيسية (الغلاف)',
+    product_set_primary: 'تعيين كغلاف رئيسي',
+    product_remove_image: 'حذف الصورة',
+    product_replace_image: 'استبدال الصورة',
+    product_uploading: 'جاري رفع وحفظ الصورة...',
+    product_name_ar: 'اسم المنتج (عربي)',
+    product_name_fr: 'اسم المنتج (فرنسي)',
+    product_name_en: 'اسم المنتج (إنجليزي)',
+    product_desc_ar: 'وصف المنتج (عربي)',
+    product_desc_fr: 'وصف المنتج (فرنسي)',
+    product_desc_en: 'وصف المنتج (إنجليزي)',
+
+    // Content Translations
+    translations_title: 'إدارة المحتوى والترجمات اللغوية',
+    translations_subtitle: 'أدخل النصوص باللغات الثلاث (عربي، فرنسي، إنجليزي) لتعمل تلقائياً عند تغيير لغة المتجر',
+    trans_store_name: 'اسم المتجر والعلامة',
+    trans_store_desc: 'وصف المتجر المختصر',
+    trans_hero_headline: 'العنوان الرئيسي للبوابة',
+    trans_hero_subheadline: 'العنوان الفرعي التوضيحي',
+    trans_hero_cta: 'نص زر الطلب والتخصيص',
+    trans_about: 'نبذة عن المتجر وخدمات الطباعة',
+    trans_faq: 'الأسئلة الشائعة وتوضيحات التوصيل',
+    trans_categories: 'ترجمة أسماء التصنيفات',
+    trans_save_success: 'تم حفظ الترجمات بنجاح في قاعدة البيانات',
+    trans_tab_ar: 'العربية (AR)',
+    trans_tab_fr: 'الفرنسية (FR)',
+    trans_tab_en: 'الإنجليزية (EN)',
+
+    // Multi-Store
+    store_selector: 'المتجر النشط',
+    store_main: 'ديزاد برينت (المتجر الرئيسي)',
+    store_isolated_note: 'البيانات معزولة لكل متجر بشكل مستقل عبر قاعدة البيانات',
+    store_create_new: 'إنشاء متجر جديد',
+
     currency: 'دج',
     contact_whatsapp: 'تواصل عبر واتساب',
     order_via_whatsapp: 'اطلب مباشرة عبر واتساب',
@@ -453,6 +627,93 @@ export const translations: Record<Language, Translations> = {
     print_order: 'Imprimer le bon de commande',
     download_design: 'Télécharger le fichier client',
 
+    // Admin Tabs
+    admin_tab_orders: 'Commandes',
+    admin_tab_production: 'Atelier & Impression',
+    admin_tab_inventory: 'Stock & Fournitures',
+    admin_tab_customers: 'Clients (CRM)',
+    admin_tab_invoices: 'Factures & Devis',
+    admin_tab_delivery: 'Tarifs & Livraisons',
+    admin_tab_products: 'Produits',
+    admin_tab_designs: 'Designs',
+    admin_tab_coupons: 'Codes Promo',
+    admin_tab_analytics: 'Statistiques',
+    admin_tab_landing_builder: 'Créateur Page d Accueil',
+    admin_tab_settings: 'Paramètres',
+    admin_tab_translations: 'Langues & Contenus',
+
+    // Landing Builder
+    landing_builder_title: 'Créateur Visuel de la Page d Accueil',
+    landing_builder_subtitle: 'Gérez vos sections, réorganisez-les, éditez les textes en 3 langues et publiez en 1 clic',
+    landing_save_draft: 'Enregistrer brouillon',
+    landing_publish: 'Publier sur la boutique',
+    landing_published_badge: 'Version en ligne',
+    landing_draft_badge: 'Mode brouillon',
+    landing_add_section: 'Ajouter une section',
+    landing_preview_desktop: 'Ordinateur',
+    landing_preview_tablet: 'Tablette',
+    landing_preview_mobile: 'Mobile',
+    landing_move_up: 'Monter',
+    landing_move_down: 'Descendre',
+    landing_hide_section: 'Masquer',
+    landing_show_section: 'Afficher',
+    landing_duplicate_section: 'Dupliquer',
+    landing_delete_section: 'Supprimer',
+    landing_edit_section: 'Modifier le contenu',
+    landing_preview_mode: 'Aperçu en direct',
+    landing_editor_mode: 'Éditeur de sections',
+    landing_draft_saved: 'Brouillon sauvegardé avec succès',
+    landing_published_success: 'Page publiée avec succès sur votre boutique en direct !',
+    landing_section_type_hero: 'Bannière d Accueil (Hero)',
+    landing_section_type_featured_products: 'Produits Vedettes',
+    landing_section_type_categories: 'Catégories de Produits',
+    landing_section_type_promo_banner: 'Bannière Promotionnelle & Codes',
+    landing_section_type_about: 'À Propos & Notre Atelier',
+    landing_section_type_services: 'Engagements & Avantages',
+    landing_section_type_testimonials: 'Avis Clients Vérifiés',
+    landing_section_type_faq: 'Questions Fréquentes (FAQ)',
+    landing_section_type_contact: 'Coordonnées & Carte Wilayas',
+    landing_section_type_custom_text_image: 'Texte Libre & Image',
+    landing_section_type_cta: 'Appel à l Action (CTA)',
+
+    // Product Images
+    product_images: 'Galerie Photos du Produit',
+    product_upload_images: 'Importer des images depuis l ordinateur',
+    product_drop_images: 'Glissez-déposez vos photos ou cliquez pour parcourir',
+    product_primary_image: 'Image Principale (Couverture)',
+    product_set_primary: 'Définir comme principale',
+    product_remove_image: 'Supprimer',
+    product_replace_image: 'Remplacer l image',
+    product_uploading: 'Envoi et hébergement en cours...',
+    product_name_ar: 'Nom du produit (Arabe)',
+    product_name_fr: 'Nom du produit (Français)',
+    product_name_en: 'Nom du produit (Anglais)',
+    product_desc_ar: 'Description (Arabe)',
+    product_desc_fr: 'Description (Français)',
+    product_desc_en: 'Description (Anglais)',
+
+    // Content Translations
+    translations_title: 'Gestion des Textes & Traductions',
+    translations_subtitle: 'Renseignez les versions arabe, française et anglaise pour chaque section clé',
+    trans_store_name: 'Nom de la boutique',
+    trans_store_desc: 'Description courte',
+    trans_hero_headline: 'Titre principal Hero',
+    trans_hero_subheadline: 'Sous-titre explicatif',
+    trans_hero_cta: 'Texte du bouton d action',
+    trans_about: 'Texte de présentation de l atelier',
+    trans_faq: 'Questions & Réponses fréquentes',
+    trans_categories: 'Traductions des catégories',
+    trans_save_success: 'Traductions enregistrées avec succès',
+    trans_tab_ar: 'Arabe (AR)',
+    trans_tab_fr: 'Français (FR)',
+    trans_tab_en: 'Anglais (EN)',
+
+    // Multi-Store
+    store_selector: 'Boutique active',
+    store_main: 'DZPrint (Boutique principale)',
+    store_isolated_note: 'Données isolées et sécurisées par boutique',
+    store_create_new: 'Créer une nouvelle boutique',
+
     currency: 'DA',
     contact_whatsapp: 'Contacter sur WhatsApp',
     order_via_whatsapp: 'Commander via WhatsApp',
@@ -601,6 +862,93 @@ export const translations: Record<Language, Translations> = {
     save_changes: 'Save Changes',
     print_order: 'Print Order Sheet',
     download_design: 'Download Customer Design',
+
+    // Admin Tabs
+    admin_tab_orders: 'Orders',
+    admin_tab_production: 'Production & Workshop',
+    admin_tab_inventory: 'Inventory & Supplies',
+    admin_tab_customers: 'Customers (CRM)',
+    admin_tab_invoices: 'Invoices & Quotes',
+    admin_tab_delivery: 'Delivery Rates',
+    admin_tab_products: 'Products',
+    admin_tab_designs: 'Designs Gallery',
+    admin_tab_coupons: 'Promo Coupons',
+    admin_tab_analytics: 'Analytics',
+    admin_tab_landing_builder: 'Landing Page Builder',
+    admin_tab_settings: 'Store Settings',
+    admin_tab_translations: 'Languages & Content',
+
+    // Landing Builder
+    landing_builder_title: 'Visual Homepage Builder',
+    landing_builder_subtitle: 'Customize, reorder sections, edit copy in 3 languages, and publish live',
+    landing_save_draft: 'Save Draft',
+    landing_publish: 'Publish to Live Store',
+    landing_published_badge: 'Live Published Version',
+    landing_draft_badge: 'Draft Mode',
+    landing_add_section: 'Add New Section',
+    landing_preview_desktop: 'Desktop View',
+    landing_preview_tablet: 'Tablet View',
+    landing_preview_mobile: 'Mobile View',
+    landing_move_up: 'Move Up',
+    landing_move_down: 'Move Down',
+    landing_hide_section: 'Hide Section',
+    landing_show_section: 'Show Section',
+    landing_duplicate_section: 'Duplicate Section',
+    landing_delete_section: 'Delete Section',
+    landing_edit_section: 'Edit Content & Layout',
+    landing_preview_mode: 'Live Preview',
+    landing_editor_mode: 'Section Editor',
+    landing_draft_saved: 'Draft saved successfully',
+    landing_published_success: 'Homepage published successfully to your live storefront!',
+    landing_section_type_hero: 'Hero Welcome Banner',
+    landing_section_type_featured_products: 'Featured Products',
+    landing_section_type_categories: 'Product Categories',
+    landing_section_type_promo_banner: 'Promotional Banner & Coupons',
+    landing_section_type_about: 'About Us & Workshop Story',
+    landing_section_type_services: 'Trust Badges & Guarantees',
+    landing_section_type_testimonials: 'Customer Reviews',
+    landing_section_type_faq: 'Frequently Asked Questions (FAQ)',
+    landing_section_type_contact: 'Contact Info & Wilaya Map',
+    landing_section_type_custom_text_image: 'Custom Text & Image',
+    landing_section_type_cta: 'Call to Action Banner',
+
+    // Product Images
+    product_images: 'Product Photos Gallery',
+    product_upload_images: 'Upload Photos from Computer',
+    product_drop_images: 'Drag & drop photos here, or click to browse files',
+    product_primary_image: 'Primary Image (Thumbnail)',
+    product_set_primary: 'Set as Primary',
+    product_remove_image: 'Delete Photo',
+    product_replace_image: 'Replace Photo',
+    product_uploading: 'Uploading photo to cloud storage...',
+    product_name_ar: 'Product Name (Arabic)',
+    product_name_fr: 'Product Name (French)',
+    product_name_en: 'Product Name (English)',
+    product_desc_ar: 'Description (Arabic)',
+    product_desc_fr: 'Description (French)',
+    product_desc_en: 'Description (English)',
+
+    // Content Translations
+    translations_title: 'Content & Multilingual Translations',
+    translations_subtitle: 'Enter Arabic, French, and English versions to adapt seamlessly when users switch languages',
+    trans_store_name: 'Store Name',
+    trans_store_desc: 'Short Store Description',
+    trans_hero_headline: 'Hero Headline',
+    trans_hero_subheadline: 'Hero Subheadline',
+    trans_hero_cta: 'Hero Call to Action Button',
+    trans_about: 'About Our Workshop',
+    trans_faq: 'FAQ Questions & Answers',
+    trans_categories: 'Categories Translations',
+    trans_save_success: 'Translations saved successfully in database',
+    trans_tab_ar: 'Arabic (AR)',
+    trans_tab_fr: 'French (FR)',
+    trans_tab_en: 'English (EN)',
+
+    // Multi-Store
+    store_selector: 'Active Store',
+    store_main: 'DZPrint (Primary Store)',
+    store_isolated_note: 'Data is strictly isolated per store via database',
+    store_create_new: 'Create New Store',
 
     currency: 'DA',
     contact_whatsapp: 'Contact on WhatsApp',

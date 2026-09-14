@@ -16,6 +16,9 @@ import {
   ProductionJob,
   ProductionStage,
   Invoice,
+  Store,
+  LandingSection,
+  LandingPageData,
 } from '../src/types';
 import { getServerSupabase, isServerSupabaseConfigured } from './supabase';
 

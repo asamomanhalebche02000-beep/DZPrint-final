@@ -36,7 +36,54 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT,
   phone TEXT,
   role user_role DEFAULT 'customer' NOT NULL,
+  store_id TEXT,
   avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 3.1 STORES (Multi-store architecture)
+CREATE TABLE IF NOT EXISTS public.stores (
+  id TEXT PRIMARY KEY,
+  owner_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  logo TEXT,
+  favicon TEXT,
+  phone TEXT DEFAULT '0550 12 34 56',
+  whatsapp TEXT DEFAULT '0550 12 34 56',
+  email TEXT DEFAULT 'contact@dzprint.dz',
+  address TEXT DEFAULT 'الجزائر العاصمة',
+  description TEXT DEFAULT 'متجر طباعة وتخصيص رقمي متقدم في الجزائر',
+  default_language TEXT DEFAULT 'ar',
+  supported_languages JSONB DEFAULT '["ar", "fr", "en"]'::jsonb,
+  is_active BOOLEAN DEFAULT true NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Insert default primary store for DZPrint
+INSERT INTO public.stores (id, slug, name, phone, email, address, description, default_language)
+VALUES (
+  'store-dzprint-default',
+  'dzprint',
+  'ديزاد برينت | DZPrint',
+  '0550 12 34 56',
+  'contact@dzprint.dz',
+  'الجزائر العاصمة، بئر مراد رايس',
+  'المنصة الأولى للطباعة الرقمية المباشرة DTF والشحن لـ 58 ولاية في الجزائر',
+  'ar'
+) ON CONFLICT (id) DO NOTHING;
+
+-- 3.2 LANDING PAGE SECTIONS (Visual Builder)
+CREATE TABLE IF NOT EXISTS public.landing_sections (
+  id TEXT PRIMARY KEY,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default' NOT NULL,
+  type TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0 NOT NULL,
+  is_visible BOOLEAN DEFAULT true NOT NULL,
+  content JSONB DEFAULT '{}'::jsonb NOT NULL,
+  is_published BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -44,6 +91,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 4. CATEGORIES
 CREATE TABLE IF NOT EXISTS public.categories (
   id TEXT PRIMARY KEY,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default',
   name_ar TEXT NOT NULL,
   name_fr TEXT NOT NULL,
   name_en TEXT,
@@ -57,9 +105,11 @@ CREATE TABLE IF NOT EXISTS public.categories (
 -- 5. PRODUCTS
 CREATE TABLE IF NOT EXISTS public.products (
   id TEXT PRIMARY KEY,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default',
   name TEXT NOT NULL,
   name_ar TEXT NOT NULL,
   name_fr TEXT NOT NULL,
+  name_en TEXT,
   slug TEXT UNIQUE NOT NULL,
   category_id TEXT REFERENCES public.categories(id) ON DELETE SET NULL,
   category TEXT NOT NULL,
@@ -69,6 +119,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   description TEXT,
   description_ar TEXT,
   description_fr TEXT,
+  description_en TEXT,
   mockup_template_url TEXT,
   images JSONB DEFAULT '[]'::jsonb NOT NULL,
   colors JSONB DEFAULT '[]'::jsonb NOT NULL,
@@ -380,3 +431,14 @@ CREATE POLICY "Admin full access faqs" ON public.faqs FOR ALL USING (public.is_a
 CREATE POLICY "Admin full access site_settings" ON public.site_settings FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
 CREATE POLICY "Admin full access homepage_cms" ON public.homepage_cms FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
 CREATE POLICY "Admin full access email_templates" ON public.email_templates FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
+
+-- Multi-store & Landing page RLS policies
+ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.landing_sections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can view active stores" ON public.stores FOR SELECT USING (is_active = true);
+CREATE POLICY "Admin and owner full access stores" ON public.stores FOR ALL USING (public.is_admin() OR auth.uid() = owner_id OR auth.role() = 'service_role');
+
+CREATE POLICY "Public can view published landing sections" ON public.landing_sections FOR SELECT USING (is_published = true AND is_visible = true);
+CREATE POLICY "Admin and owner full access landing sections" ON public.landing_sections FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
+

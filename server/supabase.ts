@@ -201,3 +201,90 @@ export async function uploadStoreAssetToSupabaseStorage(
   };
 }
 
+/**
+ * Upload product image to Supabase Storage in 'product-images' bucket
+ * Organizes by store ID with unique timestamps to eliminate caching bugs
+ */
+export async function uploadProductImageToSupabaseStorage(
+  fileBuffer: Buffer,
+  fileName: string,
+  mimeType: string,
+  storeId: string = 'store-dzprint-default'
+): Promise<{ success: boolean; url?: string; storagePath?: string; error?: string }> {
+  const client = getServerSupabase();
+  const bucketName = 'product-images';
+
+  if (!client) {
+    const base64Data = fileBuffer.toString('base64');
+    const fallbackUrl = `data:${mimeType};base64,${base64Data}`;
+    return {
+      success: true,
+      url: fallbackUrl,
+      storagePath: `local-product-${Date.now()}`,
+    };
+  }
+
+  // Ensure bucket exists
+  try {
+    const { data: buckets } = await client.storage.listBuckets();
+    const exists = buckets?.some(b => b.name === bucketName);
+    if (!exists) {
+      await client.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 10 * 1024 * 1024,
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'],
+      });
+    }
+  } catch (err: any) {
+    console.warn('[Supabase Storage product-images bucket check]:', err.message);
+  }
+
+  const ext = fileName.split('.').pop()?.toLowerCase() || 'png';
+  const cleanId = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  const storagePath = `stores/${storeId}/products/${cleanId}.${ext}`;
+
+  const { data, error } = await client.storage
+    .from(bucketName)
+    .upload(storagePath, fileBuffer, {
+      contentType: mimeType,
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (error) {
+    try {
+      const fallbackUpload = await client.storage
+        .from('customer-designs')
+        .upload(storagePath, fileBuffer, {
+          contentType: mimeType,
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (!fallbackUpload.error && fallbackUpload.data) {
+        const { data: publicData } = client.storage
+          .from('customer-designs')
+          .getPublicUrl(storagePath);
+        return {
+          success: true,
+          url: publicData.publicUrl,
+          storagePath: fallbackUpload.data.path,
+        };
+      }
+    } catch {
+      // ignore
+    }
+
+    console.error('[Supabase Storage Product Image Upload Error]:', error);
+    return { success: false, error: error.message };
+  }
+
+  const { data: publicData } = client.storage.from(bucketName).getPublicUrl(storagePath);
+
+  return {
+    success: true,
+    url: publicData.publicUrl,
+    storagePath: data.path,
+  };
+}
+
