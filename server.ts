@@ -7,6 +7,7 @@ import {
   getServerSupabase,
   uploadDesignToSupabaseStorage,
   uploadStoreAssetToSupabaseStorage,
+  uploadProductImageToSupabaseStorage,
 } from './server/supabase';
 import { sendOrderNotificationEmails } from './server/email';
 import {
@@ -881,6 +882,53 @@ app.post('/api/admin/products', requireAdminAuth, async (req, res) => {
   }
 });
 
+app.put('/api/admin/products/:id', requireAdminAuth, async (req, res) => {
+  try {
+    const prod = req.body;
+    prod.id = req.params.id;
+    prod.updated_at = new Date().toISOString();
+    const saved = await Database.saveProduct(prod);
+    res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post(
+  '/api/admin/upload-product-image',
+  requireAdminAuth,
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'لم يتم استلام أي ملف للرفع' });
+      }
+      const storeId = (req.body.store_id as string) || 'store-dzprint-default';
+      const result = await uploadProductImageToSupabaseStorage(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        storeId
+      );
+
+      if (!result.success || !result.url) {
+        return res.status(500).json({
+          error: result.error || 'فشل رفع صورة المنتج إلى Supabase Storage',
+        });
+      }
+
+      res.json({
+        success: true,
+        url: result.url,
+        storagePath: result.storagePath,
+      });
+    } catch (err: any) {
+      console.error('[Upload Product Image Error]:', err);
+      res.status(500).json({ error: err.message || 'حدث خطأ أثناء رفع صورة المنتج' });
+    }
+  }
+);
+
 app.delete('/api/admin/products/:id', requireAdminAuth, async (req, res) => {
   try {
     const deleted = await Database.deleteProduct(req.params.id);
@@ -1035,6 +1083,52 @@ app.post('/api/admin/cms', requireAdminAuth, async (req, res) => {
   try {
     const updated = await Database.updateHomepageCMS(req.body);
     res.json(updated);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// DYNAMIC LANDING PAGE BUILDER & SECTIONS
+// ==========================================
+app.get('/api/landing', async (req, res) => {
+  try {
+    const storeId = (req.query.store_id as string) || 'store-dzprint-default';
+    const sections = await Database.getLandingSections(storeId, false);
+    res.json({ sections });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/landing', requireAdminAuth, async (req, res) => {
+  try {
+    const storeId = (req.query.store_id as string) || 'store-dzprint-default';
+    const draft_sections = await Database.getLandingSections(storeId, true);
+    const published_sections = await Database.getLandingSections(storeId, false);
+    res.json({ draft_sections, published_sections });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/landing/draft', requireAdminAuth, async (req, res) => {
+  try {
+    const storeId = (req.body.store_id as string) || 'store-dzprint-default';
+    const sections = req.body.sections || [];
+    const saved = await Database.saveLandingDraft(sections, storeId);
+    res.json({ success: true, sections: saved });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/landing/publish', requireAdminAuth, async (req, res) => {
+  try {
+    const storeId = (req.body.store_id as string) || 'store-dzprint-default';
+    const sections = req.body.sections;
+    const published = await Database.publishLandingSections(sections, storeId);
+    res.json({ success: true, sections: published });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

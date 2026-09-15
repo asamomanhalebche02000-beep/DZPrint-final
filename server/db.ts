@@ -1057,6 +1057,100 @@ export const INITIAL_INVOICES: Invoice[] = [
   },
 ];
 
+export const INITIAL_LANDING_SECTIONS: LandingSection[] = [
+  {
+    id: 'sec-hero-1',
+    store_id: 'store-dzprint-default',
+    type: 'hero',
+    sort_order: 1,
+    is_visible: true,
+    content: {
+      title_ar: 'أفضل منصة لطباعة التيشيرتات والأكواب في الجزائر',
+      title_fr: 'La référence de l impression textile et objets en Algérie',
+      title_en: 'Algeria s Leading Custom DTF Apparel & Mugs Platform',
+      subtitle_ar: 'اطبع تصاميمك بجودة فائقة مع توصيل سريع لـ 58 ولاية والدفع عند الاستلام',
+      subtitle_fr: 'Impression ultra haute définition DTF avec livraison 58 wilayas et paiement à la livraison',
+      subtitle_en: 'High definition DTF printing with express delivery across all 58 Wilayas and Cash on Delivery',
+      badge_ar: '🇩🇿 طباعة احترافية 100% جزائرية',
+      badge_fr: '🇩🇿 Impression Professionnelle 100% Algérienne',
+      badge_en: '🇩🇿 100% Algerian Professional Printing',
+      btn_text_ar: 'صمّم منتجك الآن',
+      btn_text_fr: 'Créer un produit personnalisé',
+      btn_text_en: 'Design Your Product',
+      btn_link: '#customizer',
+      secondary_btn_text_ar: 'استكشف الكتالوج',
+      secondary_btn_text_fr: 'Voir le catalogue',
+      secondary_btn_text_en: 'Browse Catalog',
+      secondary_btn_link: '#shop',
+    },
+  },
+  {
+    id: 'sec-services-2',
+    store_id: 'store-dzprint-default',
+    type: 'services',
+    sort_order: 2,
+    is_visible: true,
+    content: {
+      title_ar: 'لماذا يختارنا أكثر من 15,000 زبون؟',
+      title_fr: 'Pourquoi plus de 15 000 clients nous font confiance ?',
+      title_en: 'Why Over 15,000 Customers Trust Us',
+    },
+  },
+  {
+    id: 'sec-categories-3',
+    store_id: 'store-dzprint-default',
+    type: 'categories',
+    sort_order: 3,
+    is_visible: true,
+    content: {
+      title_ar: 'تشكيلاتنا الخام الجاهزة للتخصيص',
+      title_fr: 'Nos collections prêtes à être personnalisées',
+      title_en: 'Customizable Apparel & Drinkware Collections',
+    },
+  },
+  {
+    id: 'sec-featured-4',
+    store_id: 'store-dzprint-default',
+    type: 'featured_products',
+    sort_order: 4,
+    is_visible: true,
+    content: {
+      title_ar: 'الأكثر مبيعاً هذا الموسم',
+      title_fr: 'Les Meilleurs Ventes de la Saison',
+      title_en: 'Trending Best Sellers',
+    },
+  },
+  {
+    id: 'sec-promo-5',
+    store_id: 'store-dzprint-default',
+    type: 'promo_banner',
+    sort_order: 5,
+    is_visible: true,
+    content: {
+      title_ar: 'تخفيض 10% على كل طلبيات أكثر من 3 قطع',
+      title_fr: '10% de Réduction dès 3 articles commandés',
+      title_en: '10% Off on Orders of 3+ Items',
+      subtitle_ar: 'استخدم الكود DZPRINT10 عند إتمام الطلب',
+      subtitle_fr: 'Utilisez le code DZPRINT10 lors de votre commande',
+      subtitle_en: 'Use code DZPRINT10 at checkout',
+      discount_code: 'DZPRINT10',
+      discount_percent: 10,
+    },
+  },
+  {
+    id: 'sec-faq-6',
+    store_id: 'store-dzprint-default',
+    type: 'faq',
+    sort_order: 6,
+    is_visible: true,
+    content: {
+      title_ar: 'الأسئلة الأكثر تكراراً',
+      title_fr: 'Questions Fréquentes',
+      title_en: 'Frequently Asked Questions',
+    },
+  },
+];
+
 // ============================================================
 // IN-MEMORY CACHE & FALLBACK STORE (Zero disk dependence for Vercel)
 // ============================================================
@@ -1076,6 +1170,12 @@ class MemoryStore {
   movements: StockMovement[] = [...INITIAL_MOVEMENTS];
   productionJobs: ProductionJob[] = [...INITIAL_PRODUCTION_JOBS];
   invoices: Invoice[] = [...INITIAL_INVOICES];
+  landingDraft: Record<string, LandingSection[]> = {
+    'store-dzprint-default': [...INITIAL_LANDING_SECTIONS],
+  };
+  landingPublished: Record<string, LandingSection[]> = {
+    'store-dzprint-default': [...INITIAL_LANDING_SECTIONS],
+  };
   orderCounter = 1000;
 }
 
@@ -2259,5 +2359,72 @@ export class Database {
 
     await this.saveInvoice(newInvoice);
     return newInvoice;
+  }
+
+  // 17. Landing Page Sections (CMS & Page Builder)
+  static async getLandingSections(storeId = 'store-dzprint-default', isDraft = false): Promise<LandingSection[]> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('landing_sections')
+          .select('*')
+          .eq('store_id', storeId)
+          .eq('is_published', !isDraft)
+          .order('sort_order', { ascending: true });
+        if (!error && data && data.length > 0) {
+          return data;
+        }
+      } catch (err: any) {
+        console.warn('[Supabase getLandingSections fallback]:', err.message);
+      }
+    }
+    const storeMap = isDraft ? memoryStore.landingDraft : memoryStore.landingPublished;
+    if (!storeMap[storeId]) {
+      storeMap[storeId] = [...INITIAL_LANDING_SECTIONS];
+    }
+    return storeMap[storeId];
+  }
+
+  static async saveLandingDraft(sections: LandingSection[], storeId = 'store-dzprint-default'): Promise<LandingSection[]> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const rows = sections.map((sec, idx) => ({
+          ...sec,
+          store_id: storeId,
+          sort_order: idx + 1,
+          is_published: false,
+          updated_at: new Date().toISOString(),
+        }));
+        await client.from('landing_sections').upsert(rows);
+      } catch (err: any) {
+        console.warn('[Supabase saveLandingDraft fallback]:', err.message);
+      }
+    }
+    memoryStore.landingDraft[storeId] = sections;
+    return sections;
+  }
+
+  static async publishLandingSections(sections?: LandingSection[], storeId = 'store-dzprint-default'): Promise<LandingSection[]> {
+    const toPublish = sections || memoryStore.landingDraft[storeId] || [...INITIAL_LANDING_SECTIONS];
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const rows = toPublish.map((sec, idx) => ({
+          ...sec,
+          store_id: storeId,
+          sort_order: idx + 1,
+          is_published: true,
+          updated_at: new Date().toISOString(),
+        }));
+        await client.from('landing_sections').upsert(rows);
+      } catch (err: any) {
+        console.warn('[Supabase publishLandingSections fallback]:', err.message);
+      }
+    }
+    memoryStore.landingPublished[storeId] = [...toPublish];
+    memoryStore.landingDraft[storeId] = [...toPublish];
+    return toPublish;
   }
 }

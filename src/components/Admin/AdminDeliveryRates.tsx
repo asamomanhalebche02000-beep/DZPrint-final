@@ -22,7 +22,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { adminFetch } from '../../lib/adminAuth';
 
 export const AdminDeliveryRates: React.FC = () => {
-  const { isRtl } = useTheme();
+  const { t, language, isRtl } = useTheme();
 
   const [agencies, setAgencies] = useState<DeliveryAgency[]>([]);
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
@@ -221,36 +221,46 @@ export const AdminDeliveryRates: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-neutral-900 dark:text-white flex items-center gap-2">
             <Truck className="w-6 h-6 text-amber-500" />
-            إدارة شركات وأسعار التوصيل (Delivery Matrix)
+            {language === 'ar'
+              ? 'إدارة شركات وأسعار التوصيل (Delivery Matrix)'
+              : language === 'fr'
+              ? 'Gestion des Transporteurs & Tarifs de Livraison'
+              : 'Delivery Carriers & Shipping Rates Matrix'}
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            تحكم كامل في تسعيرة التوصيل المنزلي والمكتبي لكل ولاية ولكل شركة على حدة (الأسعار تطبق فوراً في المتجر)
+            {language === 'ar'
+              ? 'تحكم كامل في تسعيرة التوصيل المنزلي والمكتبي لكل ولاية ولكل شركة على حدة (الأسعار تطبق فوراً في المتجر)'
+              : language === 'fr'
+              ? 'Contrôle complet des tarifs à domicile et point relais pour chaque wilaya et chaque transporteur'
+              : 'Full control over home and stop-desk delivery rates across all 58 wilayas'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setIsAgencyModalOpen(true)}
-            className="px-3.5 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold text-xs rounded-xl hover:bg-neutral-800 transition flex items-center gap-1.5"
+            className="px-3.5 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold text-xs rounded-xl hover:bg-neutral-800 transition flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>إضافة شركة توصيل</span>
+            <span>
+              {language === 'ar' ? 'إضافة شركة توصيل' : language === 'fr' ? 'Ajouter Transporteur' : 'Add Carrier'}
+            </span>
           </button>
           <button
             onClick={handleExportCsv}
-            className="px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition flex items-center gap-1.5"
-            title="تصدير ملف إكسل CSV"
+            className="px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition flex items-center gap-1.5 cursor-pointer"
+            title={language === 'ar' ? 'تصدير ملف إكسل CSV' : language === 'fr' ? 'Exporter en CSV' : 'Export CSV'}
           >
             <Download className="w-3.5 h-3.5" />
-            <span>تصدير CSV</span>
+            <span>{language === 'ar' ? 'تصدير CSV' : language === 'fr' ? 'Exporter CSV' : 'Export CSV'}</span>
           </button>
           <button
             onClick={() => setIsCsvModalOpen(true)}
-            className="px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition flex items-center gap-1.5"
-            title="استيراد وتحديث من CSV"
+            className="px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition flex items-center gap-1.5 cursor-pointer"
+            title={language === 'ar' ? 'استيراد وتحديث من CSV' : language === 'fr' ? 'Importer depuis CSV' : 'Import CSV'}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>استيراد CSV</span>
+            <span>{language === 'ar' ? 'استيراد CSV' : language === 'fr' ? 'Importer CSV' : 'Import CSV'}</span>
           </button>
         </div>
       </div>
@@ -263,9 +273,9 @@ export const AdminDeliveryRates: React.FC = () => {
             <button
               key={a.id}
               onClick={() => setSelectedAgencyId(a.id)}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shrink-0 transition ${
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shrink-0 transition cursor-pointer ${
                 isSelected
-                  ? 'bg-amber-500 text-white shadow-sm'
+                  ? 'bg-amber-500 text-white shadow-xs'
                   : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50'
               }`}
             >
@@ -285,10 +295,15 @@ export const AdminDeliveryRates: React.FC = () => {
             </div>
             <div>
               <h3 className="font-extrabold text-sm text-neutral-900 dark:text-white">
-                تعديل أسعار {selectedAgency.name} عبر الـ 58 ولاية
+                {language === 'ar'
+                  ? `تعديل أسعار ${selectedAgency.name} عبر الـ 58 ولاية`
+                  : language === 'fr'
+                  ? `Tarifs de ${selectedAgency.name} pour les 58 wilayas`
+                  : `${selectedAgency.name} Rates across 58 Wilayas`}
               </h3>
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                الهاتف: {selectedAgency.phone} {selectedAgency.notes && `• ${selectedAgency.notes}`}
+                {language === 'ar' ? 'الهاتف: ' : language === 'fr' ? 'Tél : ' : 'Phone: '}
+                {selectedAgency.phone} {selectedAgency.notes && `• ${selectedAgency.notes}`}
               </p>
             </div>
           </div>
@@ -297,7 +312,7 @@ export const AdminDeliveryRates: React.FC = () => {
             <button
               onClick={handleSaveChanges}
               disabled={isSaving}
-              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
             >
               {isSaving ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -306,7 +321,11 @@ export const AdminDeliveryRates: React.FC = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              <span>{saveSuccess ? 'تم الحفظ بنجاح!' : 'حفظ التعديلات'}</span>
+              <span>
+                {saveSuccess
+                  ? language === 'ar' ? 'تم الحفظ بنجاح!' : language === 'fr' ? 'Enregistré avec succès !' : 'Saved successfully!'
+                  : language === 'ar' ? 'حفظ التعديلات' : language === 'fr' ? 'Enregistrer les tarifs' : 'Save Changes'}
+              </span>
             </button>
           </div>
         </div>
@@ -320,7 +339,7 @@ export const AdminDeliveryRates: React.FC = () => {
       )}
 
       {/* Filter and Matrix Table */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs overflow-hidden">
         {/* Table Search & Tools */}
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-sm">
@@ -329,13 +348,23 @@ export const AdminDeliveryRates: React.FC = () => {
               type="text"
               value={searchWilaya}
               onChange={e => setSearchWilaya(e.target.value)}
-              placeholder="ابحث عن ولاية بالرقم أو الاسم (مثال: الشلف، 02)..."
+              placeholder={
+                language === 'ar'
+                  ? 'ابحث عن ولاية بالرقم أو الاسم...'
+                  : language === 'fr'
+                  ? 'Rechercher par code ou nom de wilaya...'
+                  : 'Search by code or wilaya name...'
+              }
               className="w-full ps-9 pe-3.5 py-2 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-neutral-900 dark:text-white"
             />
           </div>
 
           <div className="text-xs text-neutral-500 dark:text-neutral-400">
-            عدد الولايات المعروضة: <strong>{filteredWilayas.length}</strong> من 58
+            {language === 'ar'
+              ? `عدد الولايات المعروضة: ${filteredWilayas.length} من 58`
+              : language === 'fr'
+              ? `Wilayas affichées : ${filteredWilayas.length} sur 58`
+              : `Displayed wilayas: ${filteredWilayas.length} / 58`}
           </div>
         </div>
 
@@ -344,27 +373,35 @@ export const AdminDeliveryRates: React.FC = () => {
           <table className="w-full text-xs text-start">
             <thead className="bg-neutral-50 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold">
               <tr>
-                <th className="p-3.5 text-start">رقم الولاية</th>
-                <th className="p-3.5 text-start">الولاية (بالعربية / الفرنسية)</th>
+                <th className="p-3.5 text-start">
+                  {language === 'ar' ? 'رقم الولاية' : language === 'fr' ? 'Code' : 'Code'}
+                </th>
+                <th className="p-3.5 text-start">
+                  {language === 'ar' ? 'الولاية (بالعربية / الفرنسية)' : language === 'fr' ? 'Wilaya' : 'Wilaya'}
+                </th>
                 <th className="p-3.5 text-start">
                   <span className="flex items-center gap-1 text-neutral-900 dark:text-white font-black">
                     <Home className="w-3.5 h-3.5 text-amber-500" />
-                    توصيل للمنزل (DA)
+                    {language === 'ar' ? 'توصيل للمنزل (دج)' : language === 'fr' ? 'À Domicile (DA)' : 'Home Delivery (DZD)'}
                   </span>
                 </th>
                 <th className="p-3.5 text-start">
                   <span className="flex items-center gap-1 text-neutral-900 dark:text-white font-black">
                     <Building className="w-3.5 h-3.5 text-emerald-500" />
-                    استلام من المكتب Stop Desk (DA)
+                    {language === 'ar' ? 'استلام من المكتب (دج)' : language === 'fr' ? 'Stop Desk (DA)' : 'Office Pickup (DZD)'}
                   </span>
                 </th>
-                <th className="p-3.5 text-start">مدة التوصيل التقديرية</th>
-                <th className="p-3.5 text-center">الحالة</th>
+                <th className="p-3.5 text-start">
+                  {language === 'ar' ? 'مدة التوصيل التقديرية' : language === 'fr' ? 'Délai estimé' : 'Estimated ETA'}
+                </th>
+                <th className="p-3.5 text-center">
+                  {language === 'ar' ? 'الحالة' : language === 'fr' ? 'Statut' : 'Status'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
               {filteredWilayas.map(w => {
-                const cur = editedRates[w.id] || { home: 700, office: 500, eta: '2-4 أيام', active: true };
+                const cur = editedRates[w.id] || { home: 700, office: 500, eta: '2-4 jours', active: true };
 
                 return (
                   <tr
@@ -375,8 +412,10 @@ export const AdminDeliveryRates: React.FC = () => {
                       {w.code}
                     </td>
                     <td className="p-3.5 font-bold text-neutral-900 dark:text-white">
-                      <span>{w.name_ar}</span>
-                      <span className="text-neutral-400 font-normal ms-1 text-[11px]">({w.name_fr})</span>
+                      <span>{language === 'ar' ? w.name_ar : w.name_fr}</span>
+                      <span className="text-neutral-400 font-normal ms-1 text-[11px]">
+                        ({language === 'ar' ? w.name_fr : w.name_ar})
+                      </span>
                     </td>
                     <td className="p-3.5">
                       <div className="flex items-center gap-1">
@@ -387,7 +426,9 @@ export const AdminDeliveryRates: React.FC = () => {
                           onChange={e => handleRateChange(w.id, 'home', parseInt(e.target.value, 10) || 0)}
                           className="w-24 px-2.5 py-1.5 font-mono font-bold text-xs bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-neutral-900 dark:text-white"
                         />
-                        <span className="text-[10px] text-neutral-400">دج</span>
+                        <span className="text-[10px] text-neutral-400">
+                          {language === 'ar' ? 'دج' : 'DA'}
+                        </span>
                       </div>
                     </td>
                     <td className="p-3.5">
@@ -399,7 +440,9 @@ export const AdminDeliveryRates: React.FC = () => {
                           onChange={e => handleRateChange(w.id, 'office', parseInt(e.target.value, 10) || 0)}
                           className="w-24 px-2.5 py-1.5 font-mono font-bold text-xs bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-neutral-900 dark:text-white"
                         />
-                        <span className="text-[10px] text-neutral-400">دج</span>
+                        <span className="text-[10px] text-neutral-400">
+                          {language === 'ar' ? 'دج' : 'DA'}
+                        </span>
                       </div>
                     </td>
                     <td className="p-3.5">
@@ -414,13 +457,15 @@ export const AdminDeliveryRates: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleRateChange(w.id, 'active', !cur.active)}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition ${
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition cursor-pointer ${
                           cur.active
                             ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
                             : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
                         }`}
                       >
-                        {cur.active ? 'مفعل' : 'معطل'}
+                        {cur.active
+                          ? language === 'ar' ? 'مفعل' : language === 'fr' ? 'Actif' : 'Active'
+                          : language === 'ar' ? 'معطل' : language === 'fr' ? 'Inactif' : 'Disabled'}
                       </button>
                     </td>
                   </tr>
@@ -436,26 +481,26 @@ export const AdminDeliveryRates: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full max-w-md border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              إضافة شركة توصيل جديدة
+              {language === 'ar' ? 'إضافة شركة توصيل جديدة' : language === 'fr' ? 'Ajouter un Transporteur' : 'Add New Carrier'}
             </h3>
             <form onSubmit={handleCreateAgency} className="space-y-3 text-xs">
               <div>
                 <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
-                  اسم شركة التوصيل *
+                  {language === 'ar' ? 'اسم شركة التوصيل *' : language === 'fr' ? 'Nom du transporteur *' : 'Carrier Name *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newAgencyName}
                   onChange={e => setNewAgencyName(e.target.value)}
-                  placeholder="مثال: Kazi Tour, ZR Express..."
+                  placeholder={language === 'ar' ? 'مثال: Yalidine, ZR Express...' : 'Ex: Yalidine, ZR Express...'}
                   className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
                 />
               </div>
 
               <div>
                 <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
-                  رقم هاتف خدمة الزبائن
+                  {language === 'ar' ? 'رقم هاتف خدمة الزبائن' : language === 'fr' ? 'Téléphone service client' : 'Customer service phone'}
                 </label>
                 <input
                   type="text"
@@ -468,7 +513,7 @@ export const AdminDeliveryRates: React.FC = () => {
 
               <div>
                 <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
-                  الموقع الإلكتروني أو رابط التتبع (اختياري)
+                  {language === 'ar' ? 'الموقع الإلكتروني أو رابط التتبع' : language === 'fr' ? 'Site web ou lien de suivi' : 'Website / Tracking link'}
                 </label>
                 <input
                   type="text"
@@ -481,13 +526,13 @@ export const AdminDeliveryRates: React.FC = () => {
 
               <div>
                 <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
-                  ملاحظات أو وصف الخدمة
+                  {language === 'ar' ? 'ملاحظات أو وصف الخدمة' : language === 'fr' ? 'Notes ou description' : 'Notes / Service description'}
                 </label>
                 <textarea
                   rows={2}
                   value={newAgencyNotes}
                   onChange={e => setNewAgencyNotes(e.target.value)}
-                  placeholder="تغطية المكاتب والولايات..."
+                  placeholder={language === 'ar' ? 'تغطية المكاتب والولايات...' : 'Coverage and details...'}
                   className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white resize-none"
                 />
               </div>
@@ -496,15 +541,15 @@ export const AdminDeliveryRates: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAgencyModalOpen(false)}
-                  className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 font-bold"
+                  className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer"
                 >
-                  إلغاء
+                  {language === 'ar' ? 'إلغاء' : language === 'fr' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600"
+                  className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 cursor-pointer"
                 >
-                  إضافة الشركة
+                  {language === 'ar' ? 'إضافة الشركة' : language === 'fr' ? 'Ajouter' : 'Add Carrier'}
                 </button>
               </div>
             </form>
@@ -517,10 +562,10 @@ export const AdminDeliveryRates: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full max-w-lg border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              استيراد مصفوفة أسعار التوصيل (CSV)
+              {language === 'ar' ? 'استيراد مصفوفة أسعار التوصيل (CSV)' : language === 'fr' ? 'Importer les tarifs (CSV)' : 'Import Shipping Rates (CSV)'}
             </h3>
             <p className="text-xs text-neutral-500">
-              ألصق محتوى ملف الـ CSV هنا بالصيغة:
+              {language === 'ar' ? 'ألصق محتوى ملف الـ CSV هنا بالصيغة:' : language === 'fr' ? 'Collez le contenu CSV au format suivant :' : 'Paste CSV content using format:'}
               <br />
               <code className="bg-neutral-100 dark:bg-neutral-800 p-1 rounded font-mono text-[11px] block mt-1">
                 Agency_ID,Agency_Name,Wilaya_ID,Wilaya_Name,Home_Price,Office_Price,ETA,Active
@@ -531,7 +576,7 @@ export const AdminDeliveryRates: React.FC = () => {
               rows={8}
               value={csvContent}
               onChange={e => setCsvContent(e.target.value)}
-              placeholder="yalidine,Yalidine Express,2,Chlef,700,500,2-4 أيام,YES"
+              placeholder="yalidine,Yalidine Express,2,Chlef,700,500,2-4 jours,YES"
               className="w-full p-3 font-mono text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
             />
 
@@ -545,16 +590,16 @@ export const AdminDeliveryRates: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsCsvModalOpen(false)}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 text-xs font-bold"
+                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 text-xs font-bold cursor-pointer"
               >
-                إغلاق
+                {language === 'ar' ? 'إغلاق' : language === 'fr' ? 'Fermer' : 'Close'}
               </button>
               <button
                 type="button"
                 onClick={handleImportCsv}
-                className="px-5 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600"
+                className="px-5 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 cursor-pointer"
               >
-                بدء الاستيراد
+                {language === 'ar' ? 'بدء الاستيراد' : language === 'fr' ? 'Démarrer l import' : 'Start Import'}
               </button>
             </div>
           </div>

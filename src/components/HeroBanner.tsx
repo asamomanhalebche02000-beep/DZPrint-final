@@ -13,23 +13,47 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onStartCustomizing,
   onExploreCatalog,
 }) => {
-  const { t, isRtl } = useTheme();
+  const { t, isRtl, language } = useTheme();
   const { settings } = useSiteSettings();
 
-  // Dynamic CMS & Customization values with safe fallbacks
-  const headline = settings?.hero_headline || 'اطبع أفكارك وتصاميمك على أجود التيشرتات والهوديز';
-  const highlight = settings?.hero_headline_highlight || 'أجود التيشرتات والهوديز';
+  const headline =
+    language === 'fr'
+      ? settings?.hero_headline_fr || 'Imprimez vos idées sur des T-Shirts & Hoodies Premium'
+      : language === 'en'
+      ? settings?.hero_headline_en || 'Print Your Custom Ideas on Premium Tees & Hoodies'
+      : settings?.hero_headline || settings?.hero_headline_ar || 'اطبع أفكارك وتصاميمك على أجود التيشرتات والهوديز';
+
+  const highlight =
+    language === 'fr'
+      ? 'T-Shirts & Hoodies Premium'
+      : language === 'en'
+      ? 'Premium Tees & Hoodies'
+      : settings?.hero_headline_highlight || 'أجود التيشرتات والهوديز';
+
   const headlineColor = settings?.hero_headline_color;
-  const headlineFont = settings?.hero_headline_font || 'Cairo';
+  const headlineFont = settings?.hero_headline_font || (language === 'ar' ? 'Cairo' : 'Plus Jakarta Sans');
+
   const subheadline =
-    settings?.hero_subheadline ||
-    'اختر نوع القماش، ارفع صورتك أو شعارك الخاص، عاين النتيجة مباشرة عبر استوديو التخصيص ثلاثي الأبعاد، واستلم طردك عند باب المنزل أو أقرب مكتب في ولايتك والدفع عند الاستلام.';
+    language === 'fr'
+      ? settings?.hero_subheadline_fr ||
+        'Choisissez votre textile, téléchargez votre visuel et visualisez le rendu directement dans notre studio 3D. Livraison 58 wilayas et paiement à la livraison.'
+      : language === 'en'
+      ? settings?.hero_subheadline_en ||
+        'Choose your garment, upload your artwork, and preview in real time with our 3D mockup studio. Express delivery across 58 wilayas and Cash on Delivery.'
+      : settings?.hero_subheadline ||
+        settings?.hero_subheadline_ar ||
+        'اختر نوع القماش، ارفع صورتك أو شعارك الخاص، عاين النتيجة مباشرة عبر استوديو التخصيص ثلاثي الأبعاد، واستلم طردك عند باب المنزل أو أقرب مكتب في ولايتك والدفع عند الاستلام.';
+
   const subheadlineColor = settings?.hero_subheadline_color;
   const badgeText =
-    settings?.hero_badge_text ||
-    'أحدث تقنيات الطباعة الرقمية المباشرة (Direct-to-Film DTF) في الجزائر';
-  const startBtnText = settings?.hero_start_btn_text || t.hero_start_designing;
-  const catalogBtnText = settings?.hero_catalog_btn_text || t.hero_explore_catalog;
+    language === 'fr'
+      ? t.hero_title_badge || '🇩🇿 Impression Direct-to-Film (DTF) Haute Définition'
+      : language === 'en'
+      ? t.hero_title_badge || '🇩🇿 High Definition Direct-to-Film (DTF) Printing in Algeria'
+      : settings?.hero_badge_text || t.hero_title_badge;
+
+  const startBtnText = settings?.hero_start_btn_text || t.hero_cta_custom;
+  const catalogBtnText = settings?.hero_catalog_btn_text || t.hero_cta_shop;
 
   // Split headline around highlight if highlight exists in headline
   const renderHeadline = () => {
@@ -105,15 +129,33 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             <div className="pt-4 flex flex-wrap items-center gap-5 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>توصيل لكافة الـ 58 ولاية</span>
+                <span>
+                  {language === 'ar'
+                    ? 'توصيل لكافة الـ 58 ولاية'
+                    : language === 'fr'
+                    ? 'Livraison dans les 58 Wilayas'
+                    : 'Express Delivery Across 58 Wilayas'}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>الدفع بعد فحص الطرد</span>
+                <span>
+                  {language === 'ar'
+                    ? 'الدفع بعد فحص الطرد'
+                    : language === 'fr'
+                    ? 'Paiement à la livraison'
+                    : 'Cash on Delivery'}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>قطن 100% عالي الكثافة</span>
+                <span>
+                  {language === 'ar'
+                    ? 'قطن 100% عالي الكثافة'
+                    : language === 'fr'
+                    ? '100% Coton Supérieur'
+                    : '100% Heavyweight Cotton'}
+                </span>
               </div>
             </div>
           </div>
@@ -134,28 +176,32 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   {/* Glowing print graphic on chest */}
                   <div className="absolute top-[120px] flex flex-col items-center justify-center p-2 rounded bg-amber-500/20 border border-amber-400/50 backdrop-blur-xs">
                     <span className="text-xs font-black text-amber-400 tracking-wider">DZPRINT STUDIO</span>
-                    <span className="text-[10px] text-white">الطباعة الحرة في الجزائر</span>
+                    <span className="text-[10px] text-white">
+                      {language === 'ar' ? 'الطباعة الحرة في الجزائر' : language === 'fr' ? 'Impression DTF Algérie' : 'Custom Printing Algeria'}
+                    </span>
                   </div>
                 </div>
 
                 {/* Floating agency badges */}
                 <div className="absolute bottom-3 start-3 px-3 py-1.5 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md rounded-xl text-[10px] font-bold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-1.5">
                   <Truck className="w-3 h-3 text-amber-500" />
-                  <span>شحن ياليدين & بروكوليس</span>
+                  <span>Yalidine & Procolis Express</span>
                 </div>
               </div>
 
               {/* Bottom stats mini-bar */}
               <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-between items-center text-xs">
                 <div>
-                  <span className="text-neutral-400 block text-[10px]">تقييم الجودة</span>
-                  <strong className="text-amber-500 font-extrabold">★ 4.9 / 5.0 (أكثر من 2400 زبون)</strong>
+                  <span className="text-neutral-400 block text-[10px]">
+                    {language === 'ar' ? 'تقييم الجودة' : language === 'fr' ? 'Note Client' : 'Customer Rating'}
+                  </span>
+                  <strong className="text-amber-500 font-extrabold">★ 4.9 / 5.0</strong>
                 </div>
                 <button
                   onClick={onStartCustomizing}
                   className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-600 hover:text-white rounded-lg font-bold text-xs transition"
                 >
-                  جرب الآن
+                  {t.customize_now}
                 </button>
               </div>
             </div>

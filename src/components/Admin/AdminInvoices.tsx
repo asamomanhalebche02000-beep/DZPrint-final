@@ -23,15 +23,36 @@ import {
 import { Invoice, InvoiceItem, InvoiceType, InvoiceStatus } from '../../types';
 import { formatPrice } from '../../lib/utils';
 import { adminFetch } from '../../lib/adminAuth';
-
-const STATUS_MAP: Record<InvoiceStatus, { label: string; color: string }> = {
-  draft: { label: 'مسودة (Brouillon)', color: 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300' },
-  sent: { label: 'تم الإرسال للعميل', color: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' },
-  paid: { label: 'مدفوعة بالكامل (Payée)', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
-  cancelled: { label: 'ملغاة (Annulée)', color: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' },
-};
+import { useTheme } from '../../context/ThemeContext';
 
 export const AdminInvoices: React.FC = () => {
+  const { t, language, isRtl } = useTheme();
+
+  const getStatusMap = (status: InvoiceStatus) => {
+    switch (status) {
+      case 'draft':
+        return {
+          label: language === 'ar' ? 'مسودة' : language === 'fr' ? 'Brouillon' : 'Draft',
+          color: 'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300',
+        };
+      case 'sent':
+        return {
+          label: language === 'ar' ? 'تم الإرسال' : language === 'fr' ? 'Envoyé' : 'Sent',
+          color: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
+        };
+      case 'paid':
+        return {
+          label: language === 'ar' ? 'مدفوعة بالكامل' : language === 'fr' ? 'Payée' : 'Paid',
+          color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+        };
+      case 'cancelled':
+        return {
+          label: language === 'ar' ? 'ملغاة' : language === 'fr' ? 'Annulée' : 'Cancelled',
+          color: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
+        };
+    }
+  };
+
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -395,9 +416,14 @@ export const AdminInvoices: React.FC = () => {
                     </td>
 
                     <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${STATUS_MAP[inv.status]?.color}`}>
-                        {STATUS_MAP[inv.status]?.label || inv.status}
-                      </span>
+                      {(() => {
+                        const s = getStatusMap(inv.status);
+                        return (
+                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${s.color}`}>
+                            {s.label}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     <td className="p-4 text-center">

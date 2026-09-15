@@ -244,6 +244,35 @@ export interface Translations {
   currency: string;
   contact_whatsapp: string;
   order_via_whatsapp: string;
+
+  // Auth & Account
+  auth_sign_in: string;
+  auth_sign_up: string;
+  auth_create_account: string;
+  auth_forgot_password: string;
+  auth_reset_password: string;
+  auth_reset_link_sent: string;
+  auth_email: string;
+  auth_password: string;
+  auth_new_password: string;
+  auth_confirm_password: string;
+  auth_full_name: string;
+  auth_store_name: string;
+  auth_store_slug: string;
+  auth_dont_have_account: string;
+  auth_already_have_account: string;
+  auth_remember_password: string;
+  auth_send_reset_link: string;
+  auth_role_owner: string;
+  auth_role_admin: string;
+  auth_role_staff: string;
+  auth_account_settings: string;
+  admin_tab_store_settings: string;
+  admin_tab_account_settings: string;
+  admin_registered_admin: string;
+  admin_view_store: string;
+  admin_secure_logout: string;
+  admin_console_title: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -481,6 +510,34 @@ export const translations: Record<Language, Translations> = {
     currency: 'دج',
     contact_whatsapp: 'تواصل عبر واتساب',
     order_via_whatsapp: 'اطلب مباشرة عبر واتساب',
+
+    auth_sign_in: 'تسجيل الدخول',
+    auth_sign_up: 'إنشاء حساب جديد',
+    auth_create_account: 'إنشاء متجر وحساب مسؤول',
+    auth_forgot_password: 'نسيت كلمة المرور؟',
+    auth_reset_password: 'إعادة تعيين كلمة المرور',
+    auth_reset_link_sent: 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني',
+    auth_email: 'البريد الإلكتروني',
+    auth_password: 'كلمة المرور',
+    auth_new_password: 'كلمة المرور الجديدة',
+    auth_confirm_password: 'تأكيد كلمة المرور',
+    auth_full_name: 'الاسم الكامل',
+    auth_store_name: 'اسم المتجر أو المطبعة',
+    auth_store_slug: 'رابط المتجر (Slug)',
+    auth_dont_have_account: 'ليس لديك حساب؟ سجّل متجرك الآن',
+    auth_already_have_account: 'لديك حساب بالفعل؟ سجّل دخولك',
+    auth_remember_password: 'تذكرت كلمة المرور؟ العودة للدخول',
+    auth_send_reset_link: 'إرسال رابط الاستعادة',
+    auth_role_owner: 'مالك المتجر (Owner)',
+    auth_role_admin: 'مدير (Admin)',
+    auth_role_staff: 'عضو فريق (Staff)',
+    auth_account_settings: 'إعدادات الحساب وكلمة المرور',
+    admin_tab_store_settings: 'إعدادات المتجر والشعار',
+    admin_tab_account_settings: 'إعدادات الحساب والأمان',
+    admin_registered_admin: 'المسؤول المسجل:',
+    admin_view_store: 'عرض المتجر',
+    admin_secure_logout: 'تسجيل الخروج الآمن',
+    admin_console_title: 'لوحة الإدارة الشاملة (DzPrint Admin Console)',
   },
 
   fr: {
@@ -717,6 +774,34 @@ export const translations: Record<Language, Translations> = {
     currency: 'DA',
     contact_whatsapp: 'Contacter sur WhatsApp',
     order_via_whatsapp: 'Commander via WhatsApp',
+
+    auth_sign_in: 'Connexion',
+    auth_sign_up: 'Créer un compte',
+    auth_create_account: 'Créer une boutique et un compte administrateur',
+    auth_forgot_password: 'Mot de passe oublié ?',
+    auth_reset_password: 'Réinitialiser le mot de passe',
+    auth_reset_link_sent: 'Lien de réinitialisation envoyé à votre adresse e-mail',
+    auth_email: 'Adresse e-mail',
+    auth_password: 'Mot de passe',
+    auth_new_password: 'Nouveau mot de passe',
+    auth_confirm_password: 'Confirmer le mot de passe',
+    auth_full_name: 'Nom complet',
+    auth_store_name: 'Nom de la boutique',
+    auth_store_slug: 'Identifiant URL (Slug)',
+    auth_dont_have_account: "Pas encore de compte ? Créez votre boutique",
+    auth_already_have_account: 'Vous avez déjà un compte ? Connectez-vous',
+    auth_remember_password: 'Mot de passe retrouvé ? Se connecter',
+    auth_send_reset_link: 'Envoyer le lien de réinitialisation',
+    auth_role_owner: 'Propriétaire (Owner)',
+    auth_role_admin: 'Administrateur (Admin)',
+    auth_role_staff: 'Collaborateur (Staff)',
+    auth_account_settings: 'Paramètres du compte & Sécurité',
+    admin_tab_store_settings: 'Paramètres boutique & Logo',
+    admin_tab_account_settings: 'Mon Compte & Mot de passe',
+    admin_registered_admin: 'Administrateur connecté :',
+    admin_view_store: 'Voir la boutique',
+    admin_secure_logout: 'Déconnexion sécurisée',
+    admin_console_title: "Console d'administration DzPrint",
   },
 
   en: {
@@ -953,5 +1038,33 @@ export const translations: Record<Language, Translations> = {
     currency: 'DA',
     contact_whatsapp: 'Contact on WhatsApp',
     order_via_whatsapp: 'Order via WhatsApp',
+
+    auth_sign_in: 'Sign In',
+    auth_sign_up: 'Sign Up',
+    auth_create_account: 'Create Store & Owner Account',
+    auth_forgot_password: 'Forgot Password?',
+    auth_reset_password: 'Reset Password',
+    auth_reset_link_sent: 'Password reset link sent to your email',
+    auth_email: 'Email Address',
+    auth_password: 'Password',
+    auth_new_password: 'New Password',
+    auth_confirm_password: 'Confirm Password',
+    auth_full_name: 'Full Name',
+    auth_store_name: 'Store Name',
+    auth_store_slug: 'Store URL Slug',
+    auth_dont_have_account: "Don't have an account? Create your store",
+    auth_already_have_account: 'Already have an account? Sign In',
+    auth_remember_password: 'Remembered password? Back to login',
+    auth_send_reset_link: 'Send Reset Link',
+    auth_role_owner: 'Store Owner',
+    auth_role_admin: 'Administrator',
+    auth_role_staff: 'Staff Member',
+    auth_account_settings: 'Account Settings & Security',
+    admin_tab_store_settings: 'Store Settings & Branding',
+    admin_tab_account_settings: 'Account & Password',
+    admin_registered_admin: 'Logged in as:',
+    admin_view_store: 'View Storefront',
+    admin_secure_logout: 'Secure Sign Out',
+    admin_console_title: 'DzPrint Admin Console',
   },
 };

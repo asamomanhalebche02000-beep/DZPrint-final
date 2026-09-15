@@ -28,27 +28,20 @@ import {
 import { SiteSettings } from '../../types';
 import { adminFetch, getAdminToken } from '../../lib/adminAuth';
 import { useSiteSettings } from '../../context/SettingsContext';
+import { useTheme } from '../../context/ThemeContext';
 import { AdminStoreSettings } from './AdminStoreSettings';
 
 const ARABIC_FONTS = [
-  { id: 'Cairo', name: 'خط القاهرة (Cairo)', desc: 'خط قياسي متوازن وعصري' },
-  { id: 'Alexandria', name: 'خط الإسكندرية (Alexandria)', desc: 'خط هندسي حديث ومميز' },
-  { id: 'Almarai', name: 'خط المراعي (Almarai)', desc: 'بسيط وخفيف عالي الوضوح' },
-  { id: 'Amiri', name: 'خط الأميري (Amiri)', desc: 'طابع كلاسيكي فخم وأصيل' },
-  { id: 'Changa', name: 'خط تشانغا (Changa)', desc: 'عريض وجريء لافت للأنظار' },
-  { id: 'Tajawal', name: 'خط تجوال (Tajawal)', desc: 'ناعم ومتناسق جداً' },
-];
-
-const PRESET_COLORS = [
-  { name: 'أسود داكن', value: '#111827' },
-  { name: 'عنبري ملكي', value: '#d97706' },
-  { name: 'أزرق احترافي', value: '#2563eb' },
-  { name: 'أخضر زمردي', value: '#059669' },
-  { name: 'بنفسجي داكن', value: '#7c3aed' },
-  { name: 'أحمر قرمزي', value: '#dc2626' },
+  { id: 'Cairo', name: 'خط القاهرة (Cairo)', desc_ar: 'خط قياسي متوازن وعصري', desc_fr: 'Police équilibrée et moderne', desc_en: 'Standard balanced modern font' },
+  { id: 'Alexandria', name: 'خط الإسكندرية (Alexandria)', desc_ar: 'خط هندسي حديث ومميز', desc_fr: 'Police géométrique distinctive', desc_en: 'Modern geometric distinctive font' },
+  { id: 'Almarai', name: 'خط المراعي (Almarai)', desc_ar: 'بسيط وخفيف عالي الوضوح', desc_fr: 'Simple, épurée et très lisible', desc_en: 'Clean, light and highly legible' },
+  { id: 'Amiri', name: 'خط الأميري (Amiri)', desc_ar: 'طابع كلاسيكي فخم وأصيل', desc_fr: 'Style classique et élégant', desc_en: 'Classic authentic elegant style' },
+  { id: 'Changa', name: 'خط تشانغا (Changa)', desc_ar: 'عريض وجريء لافت للأنظار', desc_fr: 'Gras et percutant', desc_en: 'Bold punchy eye-catching font' },
+  { id: 'Tajawal', name: 'خط تجوال (Tajawal)', desc_ar: 'ناعم ومتناسق جداً', desc_fr: 'Fluide et harmonieuse', desc_en: 'Smooth soft harmonious font' },
 ];
 
 export const AdminSettings: React.FC = () => {
+  const { t, language, isRtl } = useTheme();
   const { updateLocalSettings, refreshSettings } = useSiteSettings();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'store' | 'marketing' | 'homepage'>('store');

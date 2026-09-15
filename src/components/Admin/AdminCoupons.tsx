@@ -3,8 +3,10 @@ import { Tag, Plus, Trash2, Check, AlertCircle } from 'lucide-react';
 import { Coupon } from '../../types';
 import { formatPrice } from '../../lib/utils';
 import { adminFetch } from '../../lib/adminAuth';
+import { useTheme } from '../../context/ThemeContext';
 
 export const AdminCoupons: React.FC = () => {
+  const { t, language, isRtl } = useTheme();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -71,19 +73,27 @@ export const AdminCoupons: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-neutral-900 dark:text-white flex items-center gap-2">
             <Tag className="w-6 h-6 text-amber-500" />
-            كوبونات وقسائم التخفيض ({coupons.length})
+            {language === 'ar'
+              ? `كوبونات وقسائم التخفيض (${coupons.length})`
+              : language === 'fr'
+              ? `Codes Promo & Réductions (${coupons.length})`
+              : `Coupons & Discounts (${coupons.length})`}
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            إنشاء قسائم ترويجية لجذب الزبائن ومتابعة عدد مرات الاستخدام
+            {language === 'ar'
+              ? 'إنشاء قسائم ترويجية لجذب الزبائن ومتابعة عدد مرات الاستخدام'
+              : language === 'fr'
+              ? 'Créer des codes de réduction et suivre leur utilisation'
+              : 'Create promotional vouchers and track usage frequency'}
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition"
+          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>إنشاء كوبون جديد</span>
+          <span>{language === 'ar' ? 'إنشاء كوبون جديد' : language === 'fr' ? 'Nouveau Code Promo' : 'New Coupon'}</span>
         </button>
       </div>
 
@@ -99,23 +109,34 @@ export const AdminCoupons: React.FC = () => {
                   {cp.code}
                 </span>
                 <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
-                  {cp.discount_type === 'percentage' ? `${cp.discount_value}% خصم` : `-${formatPrice(cp.discount_value)}`}
+                  {cp.discount_type === 'percentage'
+                    ? `${cp.discount_value}% ${language === 'ar' ? 'خصم' : language === 'fr' ? 'de réduction' : 'OFF'}`
+                    : `-${formatPrice(cp.discount_value)}`}
                 </span>
               </div>
 
               <div className="mt-4 space-y-1 text-xs text-neutral-500 dark:text-neutral-400">
-                <p>الحد الأدنى للطلب: <strong>{formatPrice(cp.min_order_amount)}</strong></p>
-                <p>عدد مرات الاستخدام: <strong>{cp.times_used}</strong> من أصل {cp.usage_limit}</p>
+                <p>
+                  {language === 'ar' ? 'الحد الأدنى للطلب: ' : language === 'fr' ? 'Commande min. : ' : 'Min order: '}
+                  <strong>{formatPrice(cp.min_order_amount)}</strong>
+                </p>
+                <p>
+                  {language === 'ar' ? 'مرات الاستخدام: ' : language === 'fr' ? 'Utilisations : ' : 'Used: '}
+                  <strong>{cp.times_used}</strong> / {cp.usage_limit}
+                </p>
               </div>
             </div>
 
             <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex justify-between items-center text-xs">
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${cp.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950' : 'bg-neutral-100 text-neutral-400'}`}>
-                {cp.active ? 'نشط' : 'معطل'}
+                {cp.active
+                  ? language === 'ar' ? 'نشط' : language === 'fr' ? 'Actif' : 'Active'
+                  : language === 'ar' ? 'معطل' : language === 'fr' ? 'Inactif' : 'Disabled'}
               </span>
               <button
                 onClick={() => handleDelete(cp.id)}
-                className="text-neutral-400 hover:text-red-500 p-1"
+                className="text-neutral-400 hover:text-red-500 p-1 cursor-pointer"
+                title={language === 'ar' ? 'حذف الكوبون' : language === 'fr' ? 'Supprimer' : 'Delete'}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -129,12 +150,14 @@ export const AdminCoupons: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full max-w-md border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              إنشاء كود تخفيض ترويجي
+              {language === 'ar' ? 'إنشاء كود تخفيض ترويجي' : language === 'fr' ? 'Créer un Code de Réduction' : 'Create Promo Code'}
             </h3>
 
             <form onSubmit={handleCreateCoupon} className="space-y-3 text-xs">
               <div>
-                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">رمز الكوبون (كود)</label>
+                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                  {language === 'ar' ? 'رمز الكوبون (كود)' : language === 'fr' ? 'Code Promo' : 'Coupon Code'}
+                </label>
                 <input
                   type="text"
                   required
@@ -147,19 +170,23 @@ export const AdminCoupons: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">نوع التخفيض</label>
+                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                    {language === 'ar' ? 'نوع التخفيض' : language === 'fr' ? 'Type de réduction' : 'Discount Type'}
+                  </label>
                   <select
                     value={type}
                     onChange={e => setType(e.target.value as any)}
                     className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
                   >
-                    <option value="percentage">نسبة مئوية (%)</option>
-                    <option value="fixed">مبلغ ثابت (DA)</option>
+                    <option value="percentage">{language === 'ar' ? 'نسبة مئوية (%)' : language === 'fr' ? 'Pourcentage (%)' : 'Percentage (%)'}</option>
+                    <option value="fixed">{language === 'ar' ? 'مبلغ ثابت (دج)' : language === 'fr' ? 'Montant fixe (DA)' : 'Fixed amount (DZD)'}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">القيمة</label>
+                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                    {language === 'ar' ? 'القيمة' : language === 'fr' ? 'Valeur' : 'Value'}
+                  </label>
                   <input
                     type="number"
                     value={value}
@@ -171,7 +198,9 @@ export const AdminCoupons: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">الحد الأدنى للطلب (DA)</label>
+                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                    {language === 'ar' ? 'الحد الأدنى للطلب (دج)' : language === 'fr' ? 'Commande min. (DA)' : 'Min order (DZD)'}
+                  </label>
                   <input
                     type="number"
                     value={minOrder}
@@ -181,7 +210,9 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">حد الاستخدام الأقصى</label>
+                  <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                    {language === 'ar' ? 'حد الاستخدام الأقصى' : language === 'fr' ? 'Limite d utilisation' : 'Usage Limit'}
+                  </label>
                   <input
                     type="number"
                     value={usageLimit}
@@ -195,15 +226,15 @@ export const AdminCoupons: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 font-bold"
+                  className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer"
                 >
-                  إلغاء
+                  {language === 'ar' ? 'إلغاء' : language === 'fr' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600"
+                  className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 cursor-pointer"
                 >
-                  إنشاء الكوبون
+                  {language === 'ar' ? 'إنشاء الكوبون' : language === 'fr' ? 'Créer le code' : 'Create Coupon'}
                 </button>
               </div>
             </form>

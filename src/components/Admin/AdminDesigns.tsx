@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Plus, Trash2, Tag, Upload } from 'lucide-react';
 import { Design } from '../../types';
 import { adminFetch } from '../../lib/adminAuth';
+import { useTheme } from '../../context/ThemeContext';
 
 export const AdminDesigns: React.FC = () => {
+  const { t, language, isRtl } = useTheme();
   const [designs, setDesigns] = useState<Design[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState('');
@@ -54,7 +56,13 @@ export const AdminDesigns: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('حذف هذا التصميم من المعرض؟')) return;
+    const confirmMsg =
+      language === 'ar'
+        ? 'حذف هذا التصميم من المعرض؟'
+        : language === 'fr'
+        ? 'Supprimer ce design de la galerie ?'
+        : 'Delete this design from the gallery?';
+    if (!confirm(confirmMsg)) return;
     try {
       const res = await adminFetch(`/api/admin/designs/${id}`, { method: 'DELETE' });
       if (res.ok) fetchDesigns();
@@ -69,19 +77,27 @@ export const AdminDesigns: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-neutral-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-amber-500" />
-            معرض التصاميم الجاهزة ({designs.length})
+            {language === 'ar'
+              ? `معرض التصاميم الجاهزة (${designs.length})`
+              : language === 'fr'
+              ? `Galerie de Designs (${designs.length})`
+              : `Ready Designs Gallery (${designs.length})`}
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            تصاميم الثقافة الجزائرية، الخط العربي، وأحدث رسومات الشباب
+            {language === 'ar'
+              ? 'تصاميم الثقافة الجزائرية، الخط العربي، وأحدث رسومات الشباب'
+              : language === 'fr'
+              ? 'Designs de culture algérienne, calligraphie arabe et tendances graphiques'
+              : 'Algerian heritage, Arabic calligraphy, and modern custom illustrations'}
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition"
+          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>إضافة تصميم للمعرض</span>
+          <span>{language === 'ar' ? 'إضافة تصميم للمعرض' : language === 'fr' ? 'Nouveau Design' : 'Add Design'}</span>
         </button>
       </div>
 
@@ -114,8 +130,8 @@ export const AdminDesigns: React.FC = () => {
               </span>
               <button
                 onClick={() => handleDelete(d.id)}
-                className="text-neutral-400 hover:text-red-500 p-1"
-                title="حذف"
+                className="text-neutral-400 hover:text-red-500 p-1 cursor-pointer"
+                title={language === 'ar' ? 'حذف' : language === 'fr' ? 'Supprimer' : 'Delete'}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -129,38 +145,52 @@ export const AdminDesigns: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full max-w-md border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              إضافة تصميم جديد للمعرض
+              {language === 'ar' ? 'إضافة تصميم جديد للمعرض' : language === 'fr' ? 'Ajouter un Nouveau Design' : 'Add Design to Gallery'}
             </h3>
 
             <form onSubmit={handleAddDesign} className="space-y-3 text-xs">
               <div>
-                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">اسم التصميم</label>
+                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                  {language === 'ar' ? 'اسم التصميم' : language === 'fr' ? 'Nom du design' : 'Design Name'}
+                </label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="مثال: علم الجزائر، خط ديواني..."
+                  placeholder={language === 'ar' ? 'مثال: علم الجزائر، خط ديواني...' : 'Ex: Casbah pattern, Diwani...'}
                   className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">القسم</label>
+                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                  {language === 'ar' ? 'القسم' : language === 'fr' ? 'Catégorie' : 'Category'}
+                </label>
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
                   className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
                 >
-                  <option value="algerian">تراث وثقافة جزائرية (Algerian)</option>
-                  <option value="calligraphy">خط عربي إسلامي (Calligraphy)</option>
-                  <option value="gaming">ألعاب وأنيمي (Gaming & Anime)</option>
-                  <option value="minimalist">مينيماليست وعصري (Minimalist)</option>
+                  <option value="algerian">
+                    {language === 'ar' ? 'تراث وثقافة جزائرية (Algerian)' : language === 'fr' ? 'Patrimoine Algérien' : 'Algerian Heritage'}
+                  </option>
+                  <option value="calligraphy">
+                    {language === 'ar' ? 'خط عربي إسلامي (Calligraphy)' : language === 'fr' ? 'Calligraphie Arabe' : 'Arabic Calligraphy'}
+                  </option>
+                  <option value="gaming">
+                    {language === 'ar' ? 'ألعاب وأنيمي (Gaming & Anime)' : language === 'fr' ? 'Gaming & Animé' : 'Gaming & Anime'}
+                  </option>
+                  <option value="minimalist">
+                    {language === 'ar' ? 'مينيماليست وعصري (Minimalist)' : language === 'fr' ? 'Minimaliste & Moderne' : 'Minimalist & Modern'}
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">رابط الصورة (URL أو SVG)</label>
+                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                  {language === 'ar' ? 'رابط الصورة (URL أو SVG)' : language === 'fr' ? 'URL de l image ou SVG' : 'Image URL or SVG'}
+                </label>
                 <input
                   type="text"
                   required
@@ -172,12 +202,14 @@ export const AdminDesigns: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">الوسوم (مفصولة بفاصلة)</label>
+                <label className="block text-neutral-600 dark:text-neutral-400 mb-1">
+                  {language === 'ar' ? 'الوسوم (مفصولة بفاصلة)' : language === 'fr' ? 'Mots-clés (séparés par virgule)' : 'Tags (comma-separated)'}
+                </label>
                 <input
                   type="text"
                   value={tags}
                   onChange={e => setTags(e.target.value)}
-                  placeholder="الجزائر, دزاير, فخر"
+                  placeholder={language === 'ar' ? 'الجزائر, دزاير, فخر' : 'algeria, dz, print'}
                   className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
                 />
               </div>
@@ -186,15 +218,15 @@ export const AdminDesigns: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 font-bold"
+                  className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer"
                 >
-                  إلغاء
+                  {language === 'ar' ? 'إلغاء' : language === 'fr' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600"
+                  className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 cursor-pointer"
                 >
-                  إضافة التصميم
+                  {language === 'ar' ? 'إضافة التصميم' : language === 'fr' ? 'Ajouter' : 'Add Design'}
                 </button>
               </div>
             </form>

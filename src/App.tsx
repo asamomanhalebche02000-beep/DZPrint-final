@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
 import { ProductCatalog } from './components/ProductCatalog';
 import { DesignsGallerySection } from './components/DesignsGallerySection';
+import { DynamicLandingRenderer } from './components/DynamicLandingRenderer';
 import { PublicRatesTable } from './components/PublicRatesTable';
 import { OrderTrackingView } from './components/OrderTrackingView';
 import { AdminView } from './components/Admin/AdminView';
@@ -101,21 +103,16 @@ function MainApp() {
       {/* Main View Switcher */}
       <main className="flex-1">
         {currentView === 'shop' && (
-          <>
-            <HeroBanner
+          <div id="catalog-section">
+            <DynamicLandingRenderer
               onStartCustomizing={handleStartCustomizing}
               onExploreCatalog={() => {
                 const el = document.getElementById('catalog-section');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
+              onSelectProduct={handleOpenCustomizerWithProduct}
             />
-
-            <div id="catalog-section">
-              <ProductCatalog onCustomizeProduct={handleOpenCustomizerWithProduct} />
-            </div>
-
-            <DesignsGallerySection onSelectDesign={handleOpenCustomizerWithDesign} />
-          </>
+          </div>
         )}
 
         {currentView === 'gallery' && (
@@ -168,9 +165,11 @@ export default function App() {
   return (
     <SettingsProvider>
       <ThemeProvider>
-        <CartProvider>
-          <MainApp />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <MainApp />
+          </CartProvider>
+        </AuthProvider>
       </ThemeProvider>
     </SettingsProvider>
   );

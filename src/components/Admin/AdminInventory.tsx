@@ -24,18 +24,23 @@ import {
 import { InventoryItem, InventoryCategory, StockMovement, Supplier } from '../../types';
 import { formatPrice } from '../../lib/utils';
 import { adminFetch } from '../../lib/adminAuth';
-
-const CATEGORY_TABS: { key: string; label: string; icon: any }[] = [
-  { key: 'all', label: 'كافة المواد', icon: Boxes },
-  { key: 'blank', label: 'القطع الخام (الملابس والأكواب)', icon: Package },
-  { key: 'ink', label: 'الأحبار والكيماويات', icon: Droplet },
-  { key: 'film_powder', label: 'أفلام وبودرة DTF', icon: Layers },
-  { key: 'packaging', label: 'التغليف والعلب', icon: Boxes },
-  { key: 'suppliers', label: 'سجل الموردين', icon: Truck },
-  { key: 'movements', label: 'سجل حركات المخزون', icon: History },
-];
+import { useTheme } from '../../context/ThemeContext';
 
 export const AdminInventory: React.FC = () => {
+  const { t, language, isRtl } = useTheme();
+
+  const getCategoryTabs = () => [
+    { key: 'all', label: language === 'ar' ? 'كافة المواد' : language === 'fr' ? 'Tous les articles' : 'All Inventory', icon: Boxes },
+    { key: 'blank', label: language === 'ar' ? 'القطع الخام' : language === 'fr' ? 'Textiles & Objets bruts' : 'Raw Blanks', icon: Package },
+    { key: 'ink', label: language === 'ar' ? 'الأحبار والكيماويات' : language === 'fr' ? 'Encres & Chimie' : 'Inks & Chemicals', icon: Droplet },
+    { key: 'film_powder', label: language === 'ar' ? 'أفلام وبودرة DTF' : language === 'fr' ? 'Films & Poudre DTF' : 'DTF Film & Powder', icon: Layers },
+    { key: 'packaging', label: language === 'ar' ? 'التغليف والعلب' : language === 'fr' ? 'Emballage & Cartons' : 'Packaging & Boxes', icon: Boxes },
+    { key: 'suppliers', label: language === 'ar' ? 'سجل الموردين' : language === 'fr' ? 'Fournisseurs' : 'Suppliers Directory', icon: Truck },
+    { key: 'movements', label: language === 'ar' ? 'سجل الحركات' : language === 'fr' ? 'Mouvements de stock' : 'Stock Movements Log', icon: History },
+  ];
+
+  const CATEGORY_TABS = getCategoryTabs();
+
   const [activeTab, setActiveTab] = useState('all');
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -197,10 +202,18 @@ export const AdminInventory: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-neutral-900 dark:text-white flex items-center gap-2">
             <Boxes className="w-6 h-6 text-amber-500" />
-            إدارة المخزون وسلسلة الإمداد (Inventory & Workshop Supplies)
+            {language === 'ar'
+              ? 'إدارة المخزون وسلسلة الإمداد (Inventory & Supplies)'
+              : language === 'fr'
+              ? 'Gestion des Stocks & Fournitures'
+              : 'Inventory & Workshop Supplies Management'}
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            تتبع القطع الخام (تيشيرتات، هوديز، أكواب)، أحبار DTF والسبليمايشن، تنبيهات النقص وسجل الموردين
+            {language === 'ar'
+              ? 'تتبع القطع الخام (تيشيرتات، هوديز، أكواب)، أحبار DTF، وتنبيهات النقص'
+              : language === 'fr'
+              ? 'Suivi des textiles bruts, encres DTF, alertes de réapprovisionnement et fournisseurs'
+              : 'Track blank apparel, DTF inks, low stock threshold alerts, and supplier logs'}
           </p>
         </div>
 
@@ -208,18 +221,18 @@ export const AdminInventory: React.FC = () => {
           {activeTab === 'suppliers' ? (
             <button
               onClick={() => setIsAddSupplierModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              إضافة مورد جديد
+              <span>{language === 'ar' ? 'إضافة مورد جديد' : language === 'fr' ? 'Nouveau Fournisseur' : 'Add Supplier'}</span>
             </button>
           ) : (
             <button
               onClick={() => setIsAddItemModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              إضافة مادة للمخزون
+              <span>{language === 'ar' ? 'إضافة مادة للمخزون' : language === 'fr' ? 'Nouvel Article' : 'Add Item'}</span>
             </button>
           )}
         </div>
@@ -229,42 +242,58 @@ export const AdminInventory: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs space-y-1">
           <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-semibold">إجمالي أصناف المخزون</span>
+            <span className="text-xs font-semibold">
+              {language === 'ar' ? 'إجمالي أصناف المخزون' : language === 'fr' ? 'Total Articles' : 'Total Items'}
+            </span>
             <Boxes className="w-4 h-4 text-amber-500" />
           </div>
           <p className="text-2xl font-black text-neutral-900 dark:text-white font-mono">{items.length}</p>
-          <span className="text-[10px] text-neutral-400">ملابس، أحبار، مستلزمات</span>
+          <span className="text-[10px] text-neutral-400">
+            {language === 'ar' ? 'ملابس، أحبار، مستلزمات' : language === 'fr' ? 'Vêtements, encres, consommables' : 'Apparel, inks, consumables'}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs space-y-1">
           <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-semibold">تنبيهات نقص المخزون</span>
+            <span className="text-xs font-semibold">
+              {language === 'ar' ? 'تنبيهات نقص المخزون' : language === 'fr' ? 'Alertes Stock Faible' : 'Low Stock Alerts'}
+            </span>
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
           <p className="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">
             {lowStockItems.length}
           </p>
-          <span className="text-[10px] text-rose-600 font-medium">مواد شارفت على النفاد</span>
+          <span className="text-[10px] text-rose-600 font-medium">
+            {language === 'ar' ? 'مواد شارفت على النفاد' : language === 'fr' ? 'Articles sous le seuil critique' : 'Items below threshold'}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs space-y-1">
           <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-semibold">القيمة التقديرية للمخزون</span>
+            <span className="text-xs font-semibold">
+              {language === 'ar' ? 'القيمة التقديرية للمخزون' : language === 'fr' ? 'Valeur Estimée' : 'Stock Valuation'}
+            </span>
             <DollarSign className="w-4 h-4 text-emerald-500" />
           </div>
           <p className="text-2xl font-black text-neutral-900 dark:text-white font-mono">
             {formatPrice(totalValuation)}
           </p>
-          <span className="text-[10px] text-emerald-600 font-medium">سعر التكلفة الإجمالي</span>
+          <span className="text-[10px] text-emerald-600 font-medium">
+            {language === 'ar' ? 'سعر التكلفة الإجمالي' : language === 'fr' ? 'Coût d’achat total' : 'Total inventory cost'}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs space-y-1">
           <div className="flex items-center justify-between text-neutral-500">
-            <span className="text-xs font-semibold">الموردين المسجلين</span>
+            <span className="text-xs font-semibold">
+              {language === 'ar' ? 'الموردين المسجلين' : language === 'fr' ? 'Fournisseurs Enregistrés' : 'Registered Suppliers'}
+            </span>
             <Truck className="w-4 h-4 text-blue-500" />
           </div>
           <p className="text-2xl font-black text-neutral-900 dark:text-white font-mono">{suppliers.length}</p>
-          <span className="text-[10px] text-neutral-400">موردين محليين ودوليين</span>
+          <span className="text-[10px] text-neutral-400">
+            {language === 'ar' ? 'موردين محليين ودوليين' : language === 'fr' ? 'Locaux et partenaires' : 'Local and overseas partners'}
+          </span>
         </div>
       </div>
 
@@ -274,8 +303,12 @@ export const AdminInventory: React.FC = () => {
           <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300">
             <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 animate-pulse" />
             <span>
-              <strong>تنبيه مخزون:</strong> هناك {lowStockItems.length} مواد وصلت للحد الأدنى من المخزون (
-              {lowStockItems.map(x => x.name).join('، ')})
+              <strong>{language === 'ar' ? 'تنبيه مخزون: ' : language === 'fr' ? 'Alerte stock : ' : 'Stock Alert: '}</strong>
+              {language === 'ar'
+                ? `هناك ${lowStockItems.length} مواد وصلت للحد الأدنى من المخزون (${lowStockItems.map(x => x.name).join('، ')})`
+                : language === 'fr'
+                ? `${lowStockItems.length} articles ont atteint le seuil minimum (${lowStockItems.map(x => x.name).join(', ')})`
+                : `${lowStockItems.length} items reached minimum threshold (${lowStockItems.map(x => x.name).join(', ')})`}
             </span>
           </div>
         </div>
@@ -290,7 +323,7 @@ export const AdminInventory: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-amber-500 text-white shadow-xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -312,7 +345,11 @@ export const AdminInventory: React.FC = () => {
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
               <Truck className="w-4 h-4 text-amber-500" />
-              دليل موردي الورشة ومصادر المواد الخام
+              {language === 'ar'
+                ? 'دليل موردي الورشة ومصادر المواد الخام'
+                : language === 'fr'
+                ? 'Répertoire des Fournisseurs & Matières Premières'
+                : 'Suppliers Directory & Raw Materials Sourcing'}
             </h3>
           </div>
 
@@ -330,7 +367,7 @@ export const AdminInventory: React.FC = () => {
                     )}
                   </div>
                   <span className="px-2 py-0.5 text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold rounded-md">
-                    مورد نشط
+                    {language === 'ar' ? 'مورد نشط' : language === 'fr' ? 'Fournisseur actif' : 'Active supplier'}
                   </span>
                 </div>
 
@@ -348,7 +385,9 @@ export const AdminInventory: React.FC = () => {
                 </div>
 
                 <div className="space-y-1 border-t border-neutral-200 dark:border-neutral-700 pt-2 text-[11px]">
-                  <span className="text-neutral-500 font-semibold block">المواد الموردة:</span>
+                  <span className="text-neutral-500 font-semibold block">
+                    {language === 'ar' ? 'المواد الموردة:' : language === 'fr' ? 'Articles fournis :' : 'Supplied materials:'}
+                  </span>
                   <div className="flex flex-wrap gap-1">
                     {sup.supplied_materials.map((m, idx) => (
                       <span
@@ -376,28 +415,32 @@ export const AdminInventory: React.FC = () => {
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
               <History className="w-4 h-4 text-amber-500" />
-              سجل حركات وتدفقات المخزون (صرف، توريد، تالف)
+              {language === 'ar'
+                ? 'سجل حركات وتدفقات المخزون (صرف، توريد، تالف)'
+                : language === 'fr'
+                ? 'Historique des Mouvements (Entrées, Sorties, Pertes)'
+                : 'Stock Movements Audit Log (Restock, Use, Waste)'}
             </h3>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+            <table className="w-full text-start text-xs">
               <thead className="bg-neutral-50 dark:bg-neutral-800/60 text-neutral-500 border-b border-neutral-200 dark:border-neutral-800">
                 <tr>
-                  <th className="p-3">التاريخ والوقت</th>
-                  <th className="p-3">المادة</th>
-                  <th className="p-3">النوع</th>
-                  <th className="p-3 text-center">الكمية</th>
-                  <th className="p-3 text-center">المخزون السابق / الجديد</th>
-                  <th className="p-3">السبب / البيان</th>
-                  <th className="p-3">المشغل</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'التاريخ والوقت' : language === 'fr' ? 'Date & Heure' : 'Date & Time'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'المادة' : language === 'fr' ? 'Article' : 'Item'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'النوع' : language === 'fr' ? 'Type' : 'Type'}</th>
+                  <th className="p-3 text-center">{language === 'ar' ? 'الكمية' : language === 'fr' ? 'Quantité' : 'Quantity'}</th>
+                  <th className="p-3 text-center">{language === 'ar' ? 'المخزون السابق / الجديد' : language === 'fr' ? 'Ancien / Nouveau' : 'Prev / New Stock'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'السبب / البيان' : language === 'fr' ? 'Motif' : 'Reason / Note'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'المشغل' : language === 'fr' ? 'Opérateur' : 'Operator'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
                 {movements.map(mov => (
                   <tr key={mov.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
                     <td className="p-3 font-mono text-neutral-500 text-[11px]">
-                      {new Date(mov.timestamp).toLocaleString('ar-DZ')}
+                      {new Date(mov.timestamp).toLocaleString(language === 'ar' ? 'ar-DZ' : language === 'fr' ? 'fr-FR' : 'en-US')}
                     </td>
                     <td className="p-3 font-bold text-neutral-900 dark:text-white">{mov.item_name}</td>
                     <td className="p-3">
@@ -411,12 +454,12 @@ export const AdminInventory: React.FC = () => {
                         }`}
                       >
                         {mov.type === 'restock'
-                          ? 'شحنة توريد (+)'
+                          ? (language === 'ar' ? 'شحنة توريد (+)' : language === 'fr' ? 'Entrée stock (+)' : 'Restock (+)')
                           : mov.type === 'production_use'
-                          ? 'صرف للإنتاج (-)'
+                          ? (language === 'ar' ? 'صرف للإنتاج (-)' : language === 'fr' ? 'Production (-)' : 'Production use (-)')
                           : mov.type === 'waste_defect'
-                          ? 'تالف / تجارب (-)'
-                          : 'تعديل جرد'}
+                          ? (language === 'ar' ? 'تالف / تجارب (-)' : language === 'fr' ? 'Rebuts / Défauts (-)' : 'Waste / Defect (-)')
+                          : (language === 'ar' ? 'تعديل جرد' : language === 'fr' ? 'Ajustement' : 'Inventory Adj.')}
                       </span>
                     </td>
                     <td className="p-3 text-center font-mono font-bold">
@@ -425,7 +468,7 @@ export const AdminInventory: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3 text-center font-mono text-neutral-500">
-                      {mov.previous_stock} ← <span className="font-bold text-neutral-900 dark:text-white">{mov.new_stock}</span>
+                      {mov.previous_stock} → <span className="font-bold text-neutral-900 dark:text-white">{mov.new_stock}</span>
                     </td>
                     <td className="p-3 text-neutral-600 dark:text-neutral-400">{mov.reason || '-'}</td>
                     <td className="p-3 text-neutral-500">{mov.operator}</td>
@@ -441,32 +484,44 @@ export const AdminInventory: React.FC = () => {
           {/* Search bar */}
           <div className="p-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-neutral-400 ${isRtl ? 'right-3' : 'left-3'}`} />
               <input
                 type="text"
-                placeholder="ابحث باسم المادة، المقاس، الـ SKU أو المورد..."
+                placeholder={
+                  language === 'ar'
+                    ? 'ابحث باسم المادة، المقاس، الـ SKU أو المورد...'
+                    : language === 'fr'
+                    ? 'Rechercher par article, taille, SKU ou fournisseur...'
+                    : 'Search by item, size, SKU, or supplier...'
+                }
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pr-9 pl-3 py-1.5 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                className={`w-full py-1.5 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white ${
+                  isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'
+                }`}
               />
             </div>
             <span className="text-xs text-neutral-500">
-              عرض {filteredItems.length} من {items.length} صنف
+              {language === 'ar'
+                ? `عرض ${filteredItems.length} من ${items.length} صنف`
+                : language === 'fr'
+                ? `Affichage de ${filteredItems.length} sur ${items.length} articles`
+                : `Showing ${filteredItems.length} of ${items.length} items`}
             </span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+            <table className="w-full text-start text-xs">
               <thead className="bg-neutral-50 dark:bg-neutral-800/60 text-neutral-500 border-b border-neutral-200 dark:border-neutral-800">
                 <tr>
-                  <th className="p-3">الصنف والمواصفات</th>
-                  <th className="p-3">القسم</th>
-                  <th className="p-3">مكان التخزين</th>
-                  <th className="p-3 text-center">الكمية المتوفرة</th>
-                  <th className="p-3 text-center">الحد الأدنى</th>
-                  <th className="p-3">سعر التكلفة</th>
-                  <th className="p-3">القيمة الإجمالية</th>
-                  <th className="p-3 text-center">تعديل المخزون</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'الصنف والمواصفات' : language === 'fr' ? 'Article & Specs' : 'Item & Specs'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'القسم' : language === 'fr' ? 'Catégorie' : 'Category'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'مكان التخزين' : language === 'fr' ? 'Emplacement' : 'Location'}</th>
+                  <th className="p-3 text-center">{language === 'ar' ? 'الكمية المتوفرة' : language === 'fr' ? 'En Stock' : 'In Stock'}</th>
+                  <th className="p-3 text-center">{language === 'ar' ? 'الحد الأدنى' : language === 'fr' ? 'Seuil Min' : 'Min Alert'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'سعر التكلفة' : language === 'fr' ? 'Coût Unitaire' : 'Unit Cost'}</th>
+                  <th className="p-3 text-start">{language === 'ar' ? 'القيمة الإجمالية' : language === 'fr' ? 'Valeur Totale' : 'Total Value'}</th>
+                  <th className="p-3 text-center">{language === 'ar' ? 'تعديل المخزون' : language === 'fr' ? 'Actions' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -484,29 +539,29 @@ export const AdminInventory: React.FC = () => {
                           {item.name}
                           {isLow && (
                             <span className="px-1.5 py-0.2 bg-rose-500 text-white font-bold rounded-md text-[9px]">
-                              ناقص
+                              {language === 'ar' ? 'ناقص' : language === 'fr' ? 'Bas' : 'Low'}
                             </span>
                           )}
                         </div>
                         <div className="text-[11px] text-neutral-400 font-mono mt-0.5">
-                          {item.sku} {item.color ? `• ${item.color}` : ''} {item.size ? `• مقاس: ${item.size}` : ''}
+                          {item.sku} {item.color ? `• ${item.color}` : ''} {item.size ? `• ${language === 'ar' ? 'مقاس:' : 'Size:'} ${item.size}` : ''}
                         </div>
                       </td>
 
                       <td className="p-3">
                         <span className="px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-semibold text-[10px]">
                           {item.category === 'blank'
-                            ? 'قطع خام'
+                            ? (language === 'ar' ? 'قطع خام' : language === 'fr' ? 'Bruts' : 'Blanks')
                             : item.category === 'ink'
-                            ? 'أحبار'
+                            ? (language === 'ar' ? 'أحبار' : language === 'fr' ? 'Encres' : 'Inks')
                             : item.category === 'film_powder'
-                            ? 'أفلام وبودرة'
-                            : 'تغليف'}
+                            ? (language === 'ar' ? 'أفلام وبودرة' : language === 'fr' ? 'Films & Poudres' : 'Film & Powder')
+                            : (language === 'ar' ? 'تغليف' : language === 'fr' ? 'Emballages' : 'Packaging')}
                         </span>
                       </td>
 
                       <td className="p-3 text-neutral-500 text-[11px]">
-                        {item.location_in_workshop || 'الورشة'}
+                        {item.location_in_workshop || (language === 'ar' ? 'الورشة' : 'Atelier')}
                       </td>
 
                       <td className="p-3 text-center">
@@ -541,8 +596,8 @@ export const AdminInventory: React.FC = () => {
                               setAdjustType('restock');
                               setAdjustQty(20);
                             }}
-                            className="p-1.5 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 rounded-lg"
-                            title="إضافة شحنة توريد (+)"
+                            className="p-1.5 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 rounded-lg cursor-pointer"
+                            title={language === 'ar' ? 'إضافة شحنة توريد (+)' : 'Entrée stock (+)'}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -552,8 +607,8 @@ export const AdminInventory: React.FC = () => {
                               setAdjustType('production_use');
                               setAdjustQty(5);
                             }}
-                            className="p-1.5 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 rounded-lg"
-                            title="صرف للإنتاج أو تالف (-)"
+                            className="p-1.5 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 rounded-lg cursor-pointer"
+                            title={language === 'ar' ? 'صرف للإنتاج أو تالف (-)' : 'Sortie production (-)'}
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
@@ -571,13 +626,17 @@ export const AdminInventory: React.FC = () => {
       {/* Stock Adjustment Modal */}
       {adjustingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 max-w-md w-full p-6 space-y-4 shadow-xl text-right">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
               <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                 <Boxes className="w-4 h-4 text-amber-500" />
-                تعديل مخزون: {adjustingItem.name}
+                {language === 'ar'
+                  ? `تعديل مخزون: ${adjustingItem.name}`
+                  : language === 'fr'
+                  ? `Ajustement Stock : ${adjustingItem.name}`
+                  : `Adjust Stock: ${adjustingItem.name}`}
               </h3>
-              <button onClick={() => setAdjustingItem(null)} className="p-1 text-neutral-400">
+              <button onClick={() => setAdjustingItem(null)} className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -585,53 +644,71 @@ export const AdminInventory: React.FC = () => {
             <form onSubmit={handleStockAdjustment} className="space-y-4 text-xs">
               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">المخزون الحالي:</span>
+                  <span className="text-neutral-500">
+                    {language === 'ar' ? 'المخزون الحالي:' : language === 'fr' ? 'Stock actuel :' : 'Current Stock:'}
+                  </span>
                   <span className="font-mono font-bold text-neutral-900 dark:text-white">
                     {adjustingItem.current_stock} {adjustingItem.unit}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-500">الموقع في الورشة:</span>
+                  <span className="text-neutral-500">
+                    {language === 'ar' ? 'الموقع في الورشة:' : language === 'fr' ? 'Emplacement :' : 'Workshop Location:'}
+                  </span>
                   <span className="text-neutral-700 dark:text-neutral-300">
-                    {adjustingItem.location_in_workshop || 'غير محدد'}
+                    {adjustingItem.location_in_workshop || (language === 'ar' ? 'غير محدد' : 'Non spécifié')}
                   </span>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">نوع الحركة</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? 'نوع الحركة' : language === 'fr' ? 'Type de mouvement' : 'Movement Type'}
+                </label>
                 <select
                   value={adjustType}
                   onChange={e => setAdjustType(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-bold"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-bold text-neutral-900 dark:text-white"
                 >
-                  <option value="restock">إضافة شحنة توريد واستلام جديد (+)</option>
-                  <option value="production_use">صرف للإنتاج والطباعة (-)</option>
-                  <option value="waste_defect">تالف أو عيوب كبس حراري (-)</option>
-                  <option value="adjustment">جرد وتصحيح يدوي</option>
+                  <option value="restock">
+                    {language === 'ar' ? 'إضافة شحنة توريد واستلام جديد (+)' : language === 'fr' ? 'Réception livraison (+)' : 'Restock delivery (+)'}
+                  </option>
+                  <option value="production_use">
+                    {language === 'ar' ? 'صرف للإنتاج والطباعة (-)' : language === 'fr' ? 'Consommation production (-)' : 'Production usage (-)'}
+                  </option>
+                  <option value="waste_defect">
+                    {language === 'ar' ? 'تالف أو عيوب كبس حراري (-)' : language === 'fr' ? 'Perte / Rebut de presse (-)' : 'Defect / Waste (-)'}
+                  </option>
+                  <option value="adjustment">
+                    {language === 'ar' ? 'جرد وتصحيح يدوي' : language === 'fr' ? 'Correction d’inventaire' : 'Manual Audit Adjustment'}
+                  </option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">الكمية ({adjustingItem.unit})</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? `الكمية (${adjustingItem.unit})` : `Quantity (${adjustingItem.unit})`}
+                </label>
                 <input
                   type="number"
                   min="1"
                   required
                   value={adjustQty}
                   onChange={e => setAdjustQty(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-sm font-bold"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-sm font-bold text-neutral-900 dark:text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">السبب أو رقم الفاتورة/الطلبية</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? 'السبب أو رقم الفاتورة/الطلبية' : language === 'fr' ? 'Motif ou n° facture' : 'Reason or invoice #'}
+                </label>
                 <input
                   type="text"
                   value={adjustReason}
                   onChange={e => setAdjustReason(e.target.value)}
-                  placeholder="مثال: استلام دفعة جديدة من المورد TexPrint"
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                  placeholder={language === 'ar' ? 'مثال: استلام دفعة جديدة من المورد TexPrint' : 'Ex: Nouvelle livraison TexPrint'}
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                 />
               </div>
 
@@ -639,15 +716,15 @@ export const AdminInventory: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setAdjustingItem(null)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-xl cursor-pointer"
                 >
-                  إلغاء
+                  {language === 'ar' ? 'إلغاء' : language === 'fr' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs"
+                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs cursor-pointer"
                 >
-                  تأكيد تسجيل الحركة
+                  {language === 'ar' ? 'تأكيد تسجيل الحركة' : language === 'fr' ? 'Confirmer' : 'Confirm Movement'}
                 </button>
               </div>
             </form>
@@ -658,97 +735,111 @@ export const AdminInventory: React.FC = () => {
       {/* Add New Item Modal */}
       {isAddItemModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 max-w-lg w-full p-6 space-y-4 shadow-xl text-right">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 max-w-lg w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
               <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-amber-500" />
-                إضافة مادة أو قطعة جديدة للمخزون
+                {language === 'ar' ? 'إضافة مادة أو قطعة جديدة للمخزون' : language === 'fr' ? 'Nouvel article dans le stock' : 'Add New Inventory Item'}
               </h3>
-              <button onClick={() => setIsAddItemModalOpen(false)} className="p-1 text-neutral-400">
+              <button onClick={() => setIsAddItemModalOpen(false)} className="p-1 text-neutral-400 hover:text-neutral-600 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveItem} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">اسم المادة أو القطعة الخام *</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? 'اسم المادة أو القطعة الخام *' : language === 'fr' ? 'Nom de l’article *' : 'Item or Raw Blank Name *'}
+                </label>
                 <input
                   type="text"
                   required
                   value={itemForm.name || ''}
                   onChange={e => setItemForm({ ...itemForm, name: e.target.value })}
-                  placeholder="مثال: تيشيرت قطن ممشط أسود - مقاس XL"
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                  placeholder={language === 'ar' ? 'مثال: تيشيرت قطن ممشط أسود - مقاس XL' : 'Ex: T-shirt coton peigné noir XL'}
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">قسم المخزون</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'قسم المخزون' : language === 'fr' ? 'Catégorie' : 'Category'}
+                  </label>
                   <select
                     value={itemForm.category}
                     onChange={e => setItemForm({ ...itemForm, category: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                   >
-                    <option value="blank">قطع خام (ملابس/أكواب)</option>
-                    <option value="ink">أحبار وكيماويات</option>
-                    <option value="film_powder">أفلام وبودرة DTF</option>
-                    <option value="packaging">كرتون وتغليف</option>
+                    <option value="blank">{language === 'ar' ? 'قطع خام (ملابس/أكواب)' : language === 'fr' ? 'Textiles & Bruts' : 'Raw Blanks'}</option>
+                    <option value="ink">{language === 'ar' ? 'أحبار وكيماويات' : language === 'fr' ? 'Encres & Chimie' : 'Inks & Chemicals'}</option>
+                    <option value="film_powder">{language === 'ar' ? 'أفلام وبودرة DTF' : language === 'fr' ? 'Films & Poudre DTF' : 'DTF Film & Powder'}</option>
+                    <option value="packaging">{language === 'ar' ? 'كرتون وتغليف' : language === 'fr' ? 'Cartons & Emballage' : 'Packaging'}</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">وحدة القياس</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'وحدة القياس' : language === 'fr' ? 'Unité de mesure' : 'Unit of Measurement'}
+                  </label>
                   <input
                     type="text"
-                    value={itemForm.unit || 'قطعة'}
+                    value={itemForm.unit || (language === 'ar' ? 'قطعة' : 'Pcs')}
                     onChange={e => setItemForm({ ...itemForm, unit: e.target.value })}
-                    placeholder="قطعة، لتر، كغ، رول..."
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                    placeholder={language === 'ar' ? 'قطعة، لتر، كغ، رول...' : 'Pcs, L, Kg, Rouleau...'}
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">الكمية الحالية</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'الكمية الحالية' : language === 'fr' ? 'Quantité initiale' : 'Current Stock'}
+                  </label>
                   <input
                     type="number"
                     value={itemForm.current_stock || 0}
                     onChange={e => setItemForm({ ...itemForm, current_stock: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono"
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-neutral-900 dark:text-white"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">حد التنبيه الأدنى</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'حد التنبيه الأدنى' : language === 'fr' ? 'Seuil d’alerte' : 'Min Alert Threshold'}
+                  </label>
                   <input
                     type="number"
                     value={itemForm.min_threshold || 10}
                     onChange={e => setItemForm({ ...itemForm, min_threshold: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono"
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-neutral-900 dark:text-white"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">سعر التكلفة (دج)</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'سعر التكلفة (دج)' : language === 'fr' ? 'Prix d’achat (DZD)' : 'Unit Cost (DZD)'}
+                  </label>
                   <input
                     type="number"
                     value={itemForm.cost_per_unit || 0}
                     onChange={e => setItemForm({ ...itemForm, cost_per_unit: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono"
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-neutral-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">مكان التخزين في الورشة</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? 'مكان التخزين في الورشة' : language === 'fr' ? 'Emplacement atelier' : 'Workshop Storage Location'}
+                </label>
                 <input
                   type="text"
                   value={itemForm.location_in_workshop || ''}
                   onChange={e => setItemForm({ ...itemForm, location_in_workshop: e.target.value })}
-                  placeholder="مثال: الرف A3 - قسم الملابس الجاهزة"
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                  placeholder={language === 'ar' ? 'مثال: الرف A3 - قسم الملابس الجاهزة' : 'Ex: Rayon A3 - Textiles'}
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                 />
               </div>
 
@@ -756,15 +847,15 @@ export const AdminInventory: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddItemModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-xl cursor-pointer"
                 >
-                  إلغاء
+                  {language === 'ar' ? 'إلغاء' : language === 'fr' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs"
+                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs cursor-pointer"
                 >
-                  حفظ الصنف في المخزون
+                  {language === 'ar' ? 'حفظ الصنف في المخزون' : language === 'fr' ? 'Enregistrer' : 'Save Item'}
                 </button>
               </div>
             </form>
@@ -775,67 +866,75 @@ export const AdminInventory: React.FC = () => {
       {/* Add Supplier Modal */}
       {isAddSupplierModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 max-w-md w-full p-6 space-y-4 shadow-xl text-right">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
               <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                 <Truck className="w-5 h-5 text-amber-500" />
-                إضافة مورد جديد للورشة
+                {language === 'ar' ? 'إضافة مورد جديد للورشة' : language === 'fr' ? 'Ajouter un nouveau fournisseur' : 'Add New Supplier'}
               </h3>
-              <button onClick={() => setIsAddSupplierModalOpen(false)} className="p-1 text-neutral-400">
+              <button onClick={() => setIsAddSupplierModalOpen(false)} className="p-1 text-neutral-400 hover:text-neutral-600 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveSupplier} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">اسم المورد أو الشركة *</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? 'اسم المورد أو الشركة *' : language === 'fr' ? 'Nom du fournisseur *' : 'Supplier Company Name *'}
+                </label>
                 <input
                   type="text"
                   required
                   value={supplierForm.name || ''}
                   onChange={e => setSupplierForm({ ...supplierForm, name: e.target.value })}
-                  placeholder="مثال: SARL TexPrint Algérie"
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                  placeholder="Ex: SARL TexPrint Algérie"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">رقم الهاتف *</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'رقم الهاتف *' : language === 'fr' ? 'Téléphone *' : 'Phone Number *'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={supplierForm.phone || ''}
                     onChange={e => setSupplierForm({ ...supplierForm, phone: e.target.value })}
                     placeholder="0555 12 34 56"
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono"
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-neutral-900 dark:text-white"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">الولاية</label>
+                  <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                    {language === 'ar' ? 'الولاية' : language === 'fr' ? 'Wilaya' : 'Wilaya'}
+                  </label>
                   <input
                     type="text"
                     value={supplierForm.wilaya || ''}
                     onChange={e => setSupplierForm({ ...supplierForm, wilaya: e.target.value })}
-                    placeholder="الجزائر، وهران، بومرداس..."
-                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                    placeholder={language === 'ar' ? 'الجزائر، وهران، بومرداس...' : 'Alger, Oran, Blida...'}
+                    className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-neutral-700 dark:text-neutral-300">المواد التي يوفرها</label>
+                <label className="font-semibold text-neutral-700 dark:text-neutral-300">
+                  {language === 'ar' ? 'المواد التي يوفرها' : language === 'fr' ? 'Matériaux fournis' : 'Supplied Materials'}
+                </label>
                 <input
                   type="text"
-                  placeholder="تيشيرتات قطنية، أحبار، أكواب..."
+                  placeholder={language === 'ar' ? 'تيشيرتات قطنية، أحبار، أكواب...' : 'T-shirts, encres, tasses...'}
                   onChange={e =>
                     setSupplierForm({
                       ...supplierForm,
-                      supplied_materials: e.target.value.split('،').map(s => s.trim()).filter(Boolean),
+                      supplied_materials: e.target.value.split(/[,،]/).map(s => s.trim()).filter(Boolean),
                     })
                   }
-                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+                  className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
                 />
               </div>
 
@@ -843,15 +942,15 @@ export const AdminInventory: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddSupplierModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded-xl cursor-pointer"
                 >
-                  إلغاء
+                  {language === 'ar' ? 'إلغاء' : language === 'fr' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs"
+                  className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs cursor-pointer"
                 >
-                  حفظ المورد
+                  {language === 'ar' ? 'حفظ المورد' : language === 'fr' ? 'Enregistrer' : 'Save Supplier'}
                 </button>
               </div>
             </form>

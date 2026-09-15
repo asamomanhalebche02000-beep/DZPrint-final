@@ -2,41 +2,25 @@ import React, { useState, useEffect } from 'react';
 import {
   Package,
   Search,
-  Filter,
   Eye,
   Printer,
   Phone,
   MessageCircle,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Truck,
-  Building,
-  Home,
   Download,
-  Calendar,
-  Layers,
-  ChevronDown,
   FileText,
+  CheckCircle2,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { Order, OrderStatus } from '../../types';
 import { formatPrice } from '../../lib/utils';
 import { OrderPrintSheet } from '../OrderPrintSheet';
 import { adminFetch } from '../../lib/adminAuth';
-
-const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string }> = {
-  received: { label: 'استلام الطلب', color: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' },
-  confirmed: { label: 'مؤكد هاتفياً', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' },
-  preparing: { label: 'تجهيز القطعة', color: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' },
-  printing: { label: 'قيد الطباعة الحرارية', color: 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300' },
-  ready: { label: 'جاهز للتغليف', color: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' },
-  shipped: { label: 'تم الشحن مع الناقل', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300' },
-  out_for_delivery: { label: 'خرج للتوصيل للزبون', color: 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' },
-  delivered: { label: 'تم التوصيل واستلام المبلغ', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
-  cancelled: { label: 'ملغي / راجع', color: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' },
-};
+import { useTheme } from '../../context/ThemeContext';
 
 export const AdminOrders: React.FC = () => {
+  const { t, language, isRtl } = useTheme();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -52,6 +36,43 @@ export const AdminOrders: React.FC = () => {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [invoiceSuccessMsg, setInvoiceSuccessMsg] = useState<string | null>(null);
 
+  const getStatusConfig = (status: OrderStatus) => {
+    switch (status) {
+      case 'received':
+        return { label: t.status_received, color: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' };
+      case 'confirmed':
+        return { label: t.status_confirmed, color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' };
+      case 'preparing':
+        return { label: t.status_preparing, color: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' };
+      case 'printing':
+        return { label: t.status_printing, color: 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300' };
+      case 'ready':
+        return { label: t.status_ready, color: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' };
+      case 'shipped':
+        return { label: t.status_shipped, color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300' };
+      case 'out_for_delivery':
+        return { label: t.status_out_for_delivery, color: 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' };
+      case 'delivered':
+        return { label: t.status_delivered, color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' };
+      case 'cancelled':
+        return { label: t.status_cancelled, color: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' };
+      default:
+        return { label: status, color: 'bg-neutral-100 text-neutral-700' };
+    }
+  };
+
+  const allStatuses: OrderStatus[] = [
+    'received',
+    'confirmed',
+    'preparing',
+    'printing',
+    'ready',
+    'shipped',
+    'out_for_delivery',
+    'delivered',
+    'cancelled',
+  ];
+
   const handleGenerateInvoice = async (orderId: string) => {
     try {
       const res = await adminFetch(`/api/admin/orders/${orderId}/generate-invoice`, {
@@ -59,7 +80,13 @@ export const AdminOrders: React.FC = () => {
       });
       if (res.ok) {
         const inv = await res.json();
-        setInvoiceSuccessMsg(`تم إصدار فاتورة رسمية بنجاح: ${inv.invoice_number}`);
+        const msg =
+          language === 'ar'
+            ? `تم إصدار فاتورة رسمية بنجاح: ${inv.invoice_number}`
+            : language === 'fr'
+            ? `Facture officielle générée avec succès : ${inv.invoice_number}`
+            : `Official invoice generated successfully: ${inv.invoice_number}`;
+        setInvoiceSuccessMsg(msg);
         setTimeout(() => setInvoiceSuccessMsg(null), 5000);
       }
     } catch {
@@ -71,7 +98,9 @@ export const AdminOrders: React.FC = () => {
     try {
       const res = await adminFetch('/api/admin/orders');
       const data = await res.json();
-      setOrders(data);
+      if (Array.isArray(data)) {
+        setOrders(data);
+      }
     } catch {
       // ignore
     }
@@ -132,14 +161,16 @@ export const AdminOrders: React.FC = () => {
 
   const getWhatsAppLink = (phone: string, orderNumber: string, name: string) => {
     const clean = phone.replace(/^0/, '213').replace(/[^0-9]/g, '');
-    const message = encodeURIComponent(
-      `السلام عليكم أخي ${name}، بخصوص طلبك رقم ${orderNumber} من متجر ديزاد برينت للطباعة المخصصة. هل نؤكد شحن الطلب؟`
-    );
-    return `https://wa.me/${clean}?text=${message}`;
+    const message =
+      language === 'ar'
+        ? `السلام عليكم أخي ${name}، بخصوص طلبك رقم ${orderNumber} من متجر ديزاد برينت للطباعة المخصصة. هل نؤكد شحن الطلب؟`
+        : language === 'fr'
+        ? `Bonjour ${name}, concernant votre commande ${orderNumber} sur DzPrint. Confirmez-vous l'expédition ?`
+        : `Hello ${name}, regarding your order ${orderNumber} on DzPrint. Shall we confirm shipment?`;
+    return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
   };
 
   const handleExportCsv = () => {
-    // Generate CSV of current orders
     const headers = [
       'Order Number',
       'Date',
@@ -169,7 +200,9 @@ export const AdminOrders: React.FC = () => {
       o.status,
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,\uFEFF' +
+      [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -186,31 +219,44 @@ export const AdminOrders: React.FC = () => {
         <div>
           <h2 className="text-xl font-black text-neutral-900 dark:text-white flex items-center gap-2">
             <Package className="w-6 h-6 text-amber-500" />
-            إدارة الطلبيات والمبيعات ({orders.length})
+            <span>{t.orders}</span>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-mono">
+              {orders.length}
+            </span>
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            متابعة مراحل الإنتاج، تأكيد الاتصال، تحميل تصاميم الزبائن، وطباعة وصول الشحن
+            {language === 'ar'
+              ? 'متابعة مراحل الإنتاج، تأكيد الاتصال، تحميل تصاميم الزبائن، وطباعة وصول الشحن'
+              : language === 'fr'
+              ? 'Suivi de production, confirmation téléphonique, téléchargement des designs et bons d’expédition'
+              : 'Track production stages, phone confirmations, customer design downloads, and shipping slips'}
           </p>
         </div>
 
         <button
           onClick={handleExportCsv}
-          className="px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition flex items-center gap-2"
+          className="px-4 py-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 transition flex items-center gap-2 cursor-pointer"
         >
           <Download className="w-4 h-4" />
-          <span>تصدير الطلبيات CSV</span>
+          <span>{t.export_csv}</span>
         </button>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
         <div className="relative flex-1 w-full md:max-w-md">
           <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-neutral-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder="ابحث برقم الطلب، اسم العميل، الهاتف، أو الولاية..."
+            placeholder={
+              language === 'ar'
+                ? 'ابحث برقم الطلب، اسم العميل، الهاتف، أو الولاية...'
+                : language === 'fr'
+                ? 'Rechercher par N° commande, client, téléphone, wilaya...'
+                : 'Search by order #, customer name, phone, wilaya...'
+            }
             className="w-full ps-9 pe-3.5 py-2 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-neutral-900 dark:text-white"
           />
         </div>
@@ -222,10 +268,16 @@ export const AdminOrders: React.FC = () => {
             onChange={e => setStatusFilter(e.target.value)}
             className="text-xs px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-800 dark:text-neutral-200"
           >
-            <option value="all">كل الحالات ({orders.length})</option>
-            {Object.entries(STATUS_CONFIG).map(([st, cfg]) => (
+            <option value="all">
+              {language === 'ar'
+                ? `كل الحالات (${orders.length})`
+                : language === 'fr'
+                ? `Tous les statuts (${orders.length})`
+                : `All Statuses (${orders.length})`}
+            </option>
+            {allStatuses.map(st => (
               <option key={st} value={st}>
-                {cfg.label}
+                {getStatusConfig(st).label}
               </option>
             ))}
           </select>
@@ -236,7 +288,13 @@ export const AdminOrders: React.FC = () => {
             onChange={e => setAgencyFilter(e.target.value)}
             className="text-xs px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-800 dark:text-neutral-200"
           >
-            <option value="all">كل شركات التوصيل</option>
+            <option value="all">
+              {language === 'ar'
+                ? 'كل شركات التوصيل'
+                : language === 'fr'
+                ? 'Toutes les agences'
+                : 'All Delivery Agencies'}
+            </option>
             <option value="yalidine">Yalidine Express</option>
             <option value="procolis">Procolis</option>
             <option value="maystro">Maystro Delivery</option>
@@ -245,33 +303,44 @@ export const AdminOrders: React.FC = () => {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-start">
             <thead className="bg-neutral-50 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold">
               <tr>
-                <th className="p-3.5 text-start">رقم الطلب</th>
-                <th className="p-3.5 text-start">العميل والهاتف</th>
-                <th className="p-3.5 text-start">الولاية والتوصيل</th>
-                <th className="p-3.5 text-start">المنتجات والتصاميم</th>
-                <th className="p-3.5 text-start">المبلغ الإجمالي</th>
-                <th className="p-3.5 text-center">الحالة</th>
-                <th className="p-3.5 text-center">إجراءات</th>
+                <th className="p-3.5 text-start">{t.order_number}</th>
+                <th className="p-3.5 text-start">
+                  {language === 'ar' ? 'العميل والهاتف' : language === 'fr' ? 'Client & Tél' : 'Customer & Phone'}
+                </th>
+                <th className="p-3.5 text-start">
+                  {language === 'ar' ? 'الولاية والتوصيل' : language === 'fr' ? 'Wilaya & Livraison' : 'Wilaya & Delivery'}
+                </th>
+                <th className="p-3.5 text-start">
+                  {language === 'ar' ? 'المنتجات والتصاميم' : language === 'fr' ? 'Articles & Visuels' : 'Items & Designs'}
+                </th>
+                <th className="p-3.5 text-start">{t.total}</th>
+                <th className="p-3.5 text-center">
+                  {language === 'ar' ? 'الحالة' : language === 'fr' ? 'Statut' : 'Status'}
+                </th>
+                <th className="p-3.5 text-center">
+                  {language === 'ar' ? 'إجراءات' : language === 'fr' ? 'Actions' : 'Actions'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
               {filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-neutral-400">
-                    لا توجد طلبات تطابق الفلتر
+                    {language === 'ar'
+                      ? 'لا توجد طلبات تطابق الفلتر'
+                      : language === 'fr'
+                      ? 'Aucune commande ne correspond aux filtres'
+                      : 'No orders match current filters'}
                   </td>
                 </tr>
               ) : (
                 filteredOrders.map(order => {
-                  const statusInfo = STATUS_CONFIG[order.status] || {
-                    label: order.status,
-                    color: 'bg-neutral-100 text-neutral-700',
-                  };
+                  const statusInfo = getStatusConfig(order.status);
 
                   return (
                     <tr
@@ -284,7 +353,7 @@ export const AdminOrders: React.FC = () => {
                           {order.order_number}
                         </span>
                         <span className="text-[10px] text-neutral-400">
-                          {new Date(order.created_at).toLocaleDateString('ar-DZ')}
+                          {new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-DZ' : language === 'fr' ? 'fr-FR' : 'en-US')}
                         </span>
                       </td>
 
@@ -304,18 +373,25 @@ export const AdminOrders: React.FC = () => {
                         <div className="flex items-center gap-1 text-[10px] text-neutral-400 mt-0.5">
                           <span>{order.delivery_agency_name}</span>
                           <span>•</span>
-                          <span>{order.delivery_method === 'home' ? 'منزل' : 'مكتب'}</span>
+                          <span>
+                            {order.delivery_method === 'home'
+                              ? language === 'ar' ? 'منزل' : language === 'fr' ? 'Domicile' : 'Home'
+                              : language === 'ar' ? 'مكتب' : language === 'fr' ? 'Bureau' : 'Office'}
+                          </span>
                         </div>
                       </td>
 
                       <td className="p-3.5">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-                            {order.items.length} {order.items.length === 1 ? 'عنصر' : 'عناصر'}
+                            {order.items.length}{' '}
+                            {order.items.length === 1
+                              ? language === 'ar' ? 'عنصر' : language === 'fr' ? 'article' : 'item'
+                              : language === 'ar' ? 'عناصر' : language === 'fr' ? 'articles' : 'items'}
                           </span>
                           {order.items.some(it => it.uploaded_design_url) && (
                             <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded text-[9px] font-bold">
-                              تصميم مخصص
+                              {language === 'ar' ? 'تصميم مخصص' : language === 'fr' ? 'Design DTF' : 'Custom DTF'}
                             </span>
                           )}
                         </div>
@@ -335,15 +411,15 @@ export const AdminOrders: React.FC = () => {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => setSelectedOrder(order)}
-                            className="p-1.5 text-neutral-500 hover:text-amber-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
-                            title="تفاصيل الطلب"
+                            className="p-1.5 text-neutral-500 hover:text-amber-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg cursor-pointer"
+                            title={language === 'ar' ? 'تفاصيل الطلب' : language === 'fr' ? 'Détails' : 'Details'}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setOrderToPrint(order)}
-                            className="p-1.5 text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
-                            title="طباعة وصل الشحن"
+                            className="p-1.5 text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg cursor-pointer"
+                            title={t.print_order}
                           >
                             <Printer className="w-4 h-4" />
                           </button>
@@ -358,7 +434,7 @@ export const AdminOrders: React.FC = () => {
         </div>
       </div>
 
-      {/* Order Details Drawer / Modal */}
+      {/* Order Details Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
@@ -370,10 +446,10 @@ export const AdminOrders: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-black text-base text-neutral-900 dark:text-white font-mono">
-                    تفاصيل الطلب: {selectedOrder.order_number}
+                    {t.order_number}: {selectedOrder.order_number}
                   </h3>
                   <p className="text-xs text-neutral-400">
-                    بتاريخ {new Date(selectedOrder.created_at).toLocaleString('ar-DZ')}
+                    {new Date(selectedOrder.created_at).toLocaleString(language === 'ar' ? 'ar-DZ' : language === 'fr' ? 'fr-FR' : 'en-US')}
                   </p>
                 </div>
               </div>
@@ -381,16 +457,16 @@ export const AdminOrders: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setOrderToPrint(selectedOrder)}
-                  className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>طباعة الوصل</span>
+                  <span>{t.print_order}</span>
                 </button>
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="p-1.5 text-neutral-400 hover:text-black dark:hover:text-white rounded-lg"
+                  className="p-1.5 text-neutral-400 hover:text-black dark:hover:text-white rounded-lg cursor-pointer"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -400,7 +476,7 @@ export const AdminOrders: React.FC = () => {
               {/* Customer Contact Action Bar */}
               <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs text-neutral-400 block">بيانات العميل المستلم:</span>
+                  <span className="text-xs text-neutral-400 block">{t.customer_info}:</span>
                   <span className="font-bold text-sm text-neutral-900 dark:text-white">
                     {selectedOrder.full_name}
                   </span>
@@ -412,18 +488,18 @@ export const AdminOrders: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleGenerateInvoice(selectedOrder.id)}
-                    className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
-                    title="توليد فاتورة رسمية من بيانات هذا الطلب"
+                    className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                    title={language === 'ar' ? 'توليد فاتورة رسمية من بيانات هذا الطلب' : 'Générer facture'}
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>إصدار فاتورة (Facture)</span>
+                    <span>{language === 'ar' ? 'إصدار فاتورة' : language === 'fr' ? 'Facture' : 'Generate Invoice'}</span>
                   </button>
                   <a
                     href={`tel:${selectedOrder.phone}`}
                     className="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 flex items-center gap-1.5"
                   >
                     <Phone className="w-3.5 h-3.5" />
-                    <span>اتصال بالزبون</span>
+                    <span>{language === 'ar' ? 'اتصال بالزبون' : language === 'fr' ? 'Appeler' : 'Call'}</span>
                   </a>
                   <a
                     href={getWhatsAppLink(selectedOrder.phone, selectedOrder.order_number, selectedOrder.full_name)}
@@ -432,7 +508,7 @@ export const AdminOrders: React.FC = () => {
                     className="px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-bold hover:bg-emerald-600 flex items-center gap-1.5"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
-                    <span>واتساب WhatsApp</span>
+                    <span>WhatsApp</span>
                   </a>
                 </div>
               </div>
@@ -447,21 +523,22 @@ export const AdminOrders: React.FC = () => {
               {/* Status Update Controls */}
               <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20 space-y-3">
                 <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                  تحديث حالة الطلب وإرسال التنبيه
+                  {language === 'ar' ? 'تحديث حالة الطلب' : language === 'fr' ? 'Mettre à jour le statut' : 'Update Order Status'}
                 </span>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {Object.entries(STATUS_CONFIG).map(([st, cfg]) => {
-                    const isCurrent = selectedOrder.status === st;
+                <div className="flex flex-wrap gap-1.5">
+                  {allStatuses.map(statusKey => {
+                    const cfg = getStatusConfig(statusKey);
+                    const isSelected = selectedOrder.status === statusKey;
                     return (
                       <button
-                        key={st}
+                        key={statusKey}
+                        onClick={() => handleUpdateStatus(selectedOrder.id, statusKey)}
                         disabled={isUpdatingStatus}
-                        onClick={() => handleUpdateStatus(selectedOrder.id, st as OrderStatus)}
-                        className={`p-2 rounded-lg text-xs font-bold border text-center transition ${
-                          isCurrent
-                            ? 'bg-amber-500 text-white border-amber-500 ring-2 ring-amber-500/30'
-                            : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-amber-400'
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-white shadow-xs'
+                            : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700'
                         }`}
                       >
                         {cfg.label}
@@ -469,129 +546,98 @@ export const AdminOrders: React.FC = () => {
                     );
                   })}
                 </div>
-
-                <div className="flex gap-2 pt-1">
-                  <input
-                    type="text"
-                    value={statusNote}
-                    onChange={e => setStatusNote(e.target.value)}
-                    placeholder="أضف ملاحظة للمرحلة (مثال: تم إرسال الطرد مع السائق فلان)..."
-                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
-                  />
-                </div>
               </div>
 
-              {/* Delivery info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-1.5">
-                  <span className="font-bold text-neutral-900 dark:text-white block border-b pb-1">
-                    وجهة وتفاصيل الشحن:
-                  </span>
-                  <p>الولاية: <strong>{selectedOrder.wilaya_name || selectedOrder.wilaya_id}</strong></p>
-                  <p>شركة التوصيل: <strong>{selectedOrder.delivery_agency_name}</strong></p>
-                  <p>
-                    نوع التوصيل:{' '}
-                    <strong>{selectedOrder.delivery_method === 'home' ? 'توصيل للمنزل' : 'استلام من المكتب (Stop Desk)'}</strong>
-                  </p>
-                  {selectedOrder.delivery_address && (
-                    <p>العنوان: <span>{selectedOrder.delivery_address}</span></p>
-                  )}
-                  {selectedOrder.customer_notes && (
-                    <p className="text-amber-600">ملاحظات الزبون: {selectedOrder.customer_notes}</p>
-                  )}
-                </div>
-
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-1.5">
-                  <span className="font-bold text-neutral-900 dark:text-white block border-b pb-1">
-                    الحساب المالي:
-                  </span>
-                  <div className="flex justify-between">
-                    <span>قيمة المنتجات:</span>
-                    <span className="font-semibold">{formatPrice(selectedOrder.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>قيمة التوصيل ({selectedOrder.delivery_agency_name}):</span>
-                    <span className="font-semibold">{formatPrice(selectedOrder.delivery_fee)}</span>
-                  </div>
-                  {selectedOrder.discount > 0 && (
-                    <div className="flex justify-between text-emerald-600">
-                      <span>الخصم:</span>
-                      <span className="font-bold">-{formatPrice(selectedOrder.discount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-1 border-t text-sm font-extrabold text-neutral-900 dark:text-white">
-                    <span>المبلغ الكلي للتحصيل:</span>
-                    <span className="text-amber-600 dark:text-amber-400">{formatPrice(selectedOrder.total)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Products & Designs List with Downloads */}
+              {/* Ordered Items List */}
               <div className="space-y-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 block">
-                  القطع وتفاصيل التصاميم المرفوعة ({selectedOrder.items.length}):
-                </span>
+                <h4 className="font-bold text-xs text-neutral-400 uppercase tracking-wider">
+                  {language === 'ar' ? 'المنتجات المطلوبة والتصاميم المرفوعة' : language === 'fr' ? 'Articles & Fichiers' : 'Ordered Items & Uploaded Designs'}
+                </h4>
 
                 <div className="space-y-3">
-                  {selectedOrder.items.map((it, idx) => (
+                  {selectedOrder.items.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-4 bg-white dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs"
+                      className="p-3.5 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-3">
-                        <div
-                          className="w-14 h-14 rounded-lg flex items-center justify-center shrink-0 border"
-                          style={{ backgroundColor: it.color_hex_snapshot || '#111827' }}
-                        >
-                          {it.uploaded_design_url && (
-                            <img src={it.uploaded_design_url} alt="Design" className="w-10 h-10 object-contain" />
-                          )}
-                        </div>
-
-                        <div>
-                          <p className="font-bold text-sm text-neutral-900 dark:text-white">
-                            {it.product_name_snapshot}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5 text-neutral-500">
-                            <span>اللون: <strong>{it.color_snapshot}</strong></span>
-                            <span>•</span>
-                            <span>المقاس: <strong>{it.size_snapshot}</strong></span>
-                            <span>•</span>
-                            <span>الكمية: <strong>{it.quantity}</strong></span>
-                          </div>
-                          {it.customization_data?.custom_text && (
-                            <p className="text-amber-600 dark:text-amber-400 font-semibold mt-1">
-                              نص مطلوب للطباعة: &quot;{it.customization_data.custom_text}&quot;
-                            </p>
-                          )}
-                          {it.customization_data?.user_instructions && (
-                            <p className="text-neutral-400 text-[11px] mt-0.5">
-                              تعليمات الزبون: {it.customization_data.user_instructions}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex sm:flex-col items-end gap-2 w-full sm:w-auto justify-between">
-                        <span className="font-bold text-sm text-neutral-900 dark:text-white font-mono">
-                          {formatPrice(it.unit_price * it.quantity)}
-                        </span>
-
-                        {it.uploaded_design_url && (
+                        {item.uploaded_design_url ? (
                           <a
-                            href={it.uploaded_design_url}
+                            href={item.uploaded_design_url}
                             target="_blank"
                             rel="noreferrer"
-                            download
-                            className="px-3 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-bold hover:bg-amber-500/20 flex items-center gap-1.5"
+                            className="relative group w-14 h-14 rounded-lg overflow-hidden border border-amber-500/30 shrink-0 block"
                           >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>تحميل صورة التصميم</span>
+                            <img
+                              src={item.uploaded_design_url}
+                              alt="Custom design"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </div>
                           </a>
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-500 shrink-0">
+                            <Package className="w-6 h-6" />
+                          </div>
                         )}
+
+                        <div>
+                          <span className="font-bold text-sm text-neutral-900 dark:text-white block">
+                            {item.product_name_snapshot}
+                          </span>
+                          <span className="text-xs text-neutral-500">
+                            {item.color_snapshot} | {item.size_snapshot} | {t.quantity}: {item.quantity}
+                          </span>
+                          {item.uploaded_design_url && (
+                            <div className="mt-1">
+                              <a
+                                href={item.uploaded_design_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                download
+                                className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-bold hover:underline"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>{t.download_design}</span>
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      <span className="font-bold font-mono text-neutral-900 dark:text-white">
+                        {formatPrice(item.unit_price * item.quantity)}
+                      </span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Order Financial Totals */}
+              <div className="p-4 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl space-y-1.5 text-xs">
+                <div className="flex justify-between text-neutral-500">
+                  <span>{t.subtotal}:</span>
+                  <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                    {formatPrice(selectedOrder.subtotal)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-neutral-500">
+                  <span>{t.delivery_fee}:</span>
+                  <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                    {formatPrice(selectedOrder.delivery_fee)}
+                  </span>
+                </div>
+                {selectedOrder.discount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-bold">
+                    <span>{t.discount}:</span>
+                    <span className="font-mono">-{formatPrice(selectedOrder.discount)}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex justify-between text-sm font-black text-amber-600 dark:text-amber-400">
+                  <span>{t.total}:</span>
+                  <span className="font-mono">{formatPrice(selectedOrder.total)}</span>
                 </div>
               </div>
             </div>
@@ -599,12 +645,9 @@ export const AdminOrders: React.FC = () => {
         </div>
       )}
 
-      {/* Print Packing Slip Modal */}
+      {/* Hidden printable receipt */}
       {orderToPrint && (
-        <OrderPrintSheet
-          order={orderToPrint}
-          onClose={() => setOrderToPrint(null)}
-        />
+        <OrderPrintSheet order={orderToPrint} onClose={() => setOrderToPrint(null)} />
       )}
     </div>
   );

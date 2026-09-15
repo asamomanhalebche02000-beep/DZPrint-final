@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { SiteSettings } from '../../types';
 import { adminFetch } from '../../lib/adminAuth';
+import { useTheme } from '../../context/ThemeContext';
 
 interface AdminStoreSettingsProps {
   settings: SiteSettings;
@@ -36,6 +37,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
   onSave,
   isSaving,
 }) => {
+  const { t, language, isRtl } = useTheme();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,19 +70,31 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'فشل رفع الملف إلى التخزين السحابي');
+        throw new Error(data.error || (language === 'ar' ? 'فشل رفع الملف إلى التخزين السحابي' : language === 'fr' ? 'Échec du téléversement du fichier' : 'Failed to upload file to cloud storage'));
       }
 
       if (assetType === 'logo') {
         setSettings(prev => (prev ? { ...prev, logo_url: data.url } : null));
-        setUploadSuccess('تم رفع شعار المتجر بنجاح إلى Supabase Storage وحفظ الرابط!');
+        setUploadSuccess(
+          language === 'ar'
+            ? 'تم رفع شعار المتجر بنجاح إلى Supabase Storage وحفظ الرابط!'
+            : language === 'fr'
+            ? 'Logo de la boutique téléversé avec succès sur Supabase Storage !'
+            : 'Store logo uploaded successfully to Supabase Storage!'
+        );
       } else {
         setSettings(prev => (prev ? { ...prev, favicon_url: data.url } : null));
-        setUploadSuccess('تم رفع أيقونة المتصفح (Favicon) بنجاح إلى Supabase Storage!');
+        setUploadSuccess(
+          language === 'ar'
+            ? 'تم رفع أيقونة المتصفح (Favicon) بنجاح إلى Supabase Storage!'
+            : language === 'fr'
+            ? 'Favicon téléversé avec succès sur Supabase Storage !'
+            : 'Browser icon (Favicon) uploaded successfully to Supabase Storage!'
+        );
       }
       setTimeout(() => setUploadSuccess(null), 4000);
     } catch (err: any) {
-      setUploadError(err.message || 'حدث خطأ أثناء رفع الملف');
+      setUploadError(err.message || (language === 'ar' ? 'حدث خطأ أثناء رفع الملف' : language === 'fr' ? 'Une erreur est survenue' : 'An error occurred while uploading'));
     } finally {
       if (assetType === 'logo') {
         setIsUploadingLogo(false);
@@ -117,7 +131,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
   };
 
   const currentStoreName =
-    settings.business_name_ar || settings.store_name || settings.business_name || 'ديزاد برينت';
+    settings.business_name_ar || settings.store_name || settings.business_name || (language === 'ar' ? 'ديزاد برينت' : 'DzPrint');
 
   return (
     <div className="space-y-8 text-xs">
@@ -147,10 +161,18 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-neutral-900 dark:text-white">
-                الهوية البصرية للمتجر (Logo & Favicon)
+                {language === 'ar'
+                  ? 'الهوية البصرية للمتجر (Logo & Favicon)'
+                  : language === 'fr'
+                  ? 'Identité Visuelle de la Boutique (Logo & Favicon)'
+                  : 'Store Visual Branding (Logo & Favicon)'}
               </h3>
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                يتم رفع الملفات مباشرة وتخزينها في Supabase Storage وربطها بقاعدة البيانات
+                {language === 'ar'
+                  ? 'يتم رفع الملفات مباشرة وتخزينها في Supabase Storage وربطها بقاعدة البيانات'
+                  : language === 'fr'
+                  ? 'Fichiers téléversés directement sur Supabase Storage et associés à la base de données'
+                  : 'Files are uploaded directly to Supabase Storage and linked to the store database'}
               </p>
             </div>
           </div>
@@ -165,11 +187,11 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
             <div className="flex items-center justify-between">
               <label className="font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
                 <Store className="w-3.5 h-3.5 text-amber-500" />
-                شعار المتجر (Store Logo)
+                {language === 'ar' ? 'شعار المتجر (Store Logo)' : language === 'fr' ? 'Logo du Magasin' : 'Store Logo'}
               </label>
               {settings.logo_url && (
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> معرف حالياً
+                  <CheckCircle className="w-3 h-3" /> {language === 'ar' ? 'معرف حالياً' : language === 'fr' ? 'Actif' : 'Active'}
                 </span>
               )}
             </div>
@@ -184,13 +206,13 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                     className="max-h-16 max-w-[200px] object-contain transition-transform group-hover:scale-105"
                   />
                   <span className="text-[10px] text-neutral-400 font-mono">
-                    معاينة الشعار المعتمد
+                    {language === 'ar' ? 'معاينة الشعار المعتمد' : language === 'fr' ? 'Aperçu du logo actuel' : 'Current active logo preview'}
                   </span>
                 </div>
               ) : (
                 <div className="text-center text-neutral-400 space-y-1">
                   <ImageIcon className="w-8 h-8 mx-auto text-neutral-300 dark:text-neutral-600" />
-                  <p className="text-[11px]">لم يتم رفع شعار خاص بعد (يُستخدم الشعار الافتراضي)</p>
+                  <p className="text-[11px]">{language === 'ar' ? 'لم يتم رفع شعار خاص بعد' : language === 'fr' ? 'Aucun logo personnalisé' : 'No custom logo uploaded yet'}</p>
                 </div>
               )}
 
@@ -199,7 +221,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                 <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs flex flex-col items-center justify-center gap-2">
                   <RefreshCw className="w-6 h-6 text-amber-500 animate-spin" />
                   <span className="font-bold text-neutral-800 dark:text-neutral-200 text-xs">
-                    جاري رفع الشعار إلى Supabase Storage...
+                    {language === 'ar' ? 'جاري رفع الشعار إلى Supabase Storage...' : language === 'fr' ? 'Téléversement sur Supabase Storage...' : 'Uploading logo to Supabase Storage...'}
                   </span>
                 </div>
               )}
@@ -234,7 +256,11 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                   className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{settings.logo_url ? 'استبدال الشعار' : 'رفع شعار جديد'}</span>
+                  <span>
+                    {settings.logo_url
+                      ? (language === 'ar' ? 'استبدال الشعار' : language === 'fr' ? 'Remplacer le logo' : 'Replace Logo')
+                      : (language === 'ar' ? 'رفع شعار جديد' : language === 'fr' ? 'Téléverser un logo' : 'Upload New Logo')}
+                  </span>
                 </button>
 
                 {settings.logo_url && (
@@ -244,19 +270,23 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                     className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 font-bold rounded-lg text-xs transition flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="w-3 h-3" />
-                    <span>إزالة</span>
+                    <span>{language === 'ar' ? 'إزالة' : language === 'fr' ? 'Supprimer' : 'Remove'}</span>
                   </button>
                 )}
               </div>
               <p className="text-[10px] text-neutral-400 mt-1.5">
-                اسحب الصورة وأفلتها هنا، أو اضغط للاختيار (PNG, JPG, SVG, WEBP - الحد الأقصى 5MB)
+                {language === 'ar'
+                  ? 'اسحب الصورة وأفلتها هنا، أو اضغط للاختيار (PNG, JPG, SVG, WEBP - الحد الأقصى 5MB)'
+                  : language === 'fr'
+                  ? 'Glissez-déposez l’image ici ou cliquez (PNG, JPG, SVG, WEBP - max 5 Mo)'
+                  : 'Drag and drop image here or click to browse (PNG, JPG, SVG, WEBP - max 5MB)'}
               </p>
             </div>
 
             {/* Direct URL input fallback */}
             <div>
               <label className="block text-[11px] text-neutral-500 dark:text-neutral-400 mb-1">
-                رابط الشعار المباشر (Logo URL):
+                {language === 'ar' ? 'رابط الشعار المباشر (Logo URL):' : language === 'fr' ? 'URL direct du logo :' : 'Direct Logo URL:'}
               </label>
               <input
                 type="text"
@@ -273,11 +303,11 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
             <div className="flex items-center justify-between">
               <label className="font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
                 <Monitor className="w-3.5 h-3.5 text-blue-500" />
-                أيقونة المتصفح (Favicon / Site Icon)
+                {language === 'ar' ? 'أيقونة المتصفح (Favicon / Site Icon)' : language === 'fr' ? 'Favicon / Icône du site' : 'Favicon / Site Icon'}
               </label>
               {settings.favicon_url && (
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> مخصصة
+                  <CheckCircle className="w-3 h-3" /> {language === 'ar' ? 'مخصصة' : language === 'fr' ? 'Personnalisé' : 'Custom'}
                 </span>
               )}
             </div>
@@ -285,7 +315,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
             {/* Realistic Browser Tab Mockup Preview */}
             <div className="relative border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 bg-neutral-100 dark:bg-neutral-950 flex flex-col justify-center min-h-[120px] overflow-hidden">
               <span className="text-[10px] text-neutral-400 mb-1.5 block">
-                محاكاة مظهر التبويب في المتصفح (Live Browser Tab Preview):
+                {language === 'ar' ? 'محاكاة مظهر التبويب في المتصفح:' : language === 'fr' ? 'Aperçu de l’onglet dans le navigateur :' : 'Live Browser Tab Preview:'}
               </span>
 
               {/* Browser Window Mockup */}
@@ -312,7 +342,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                       </div>
                     )}
                     <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 truncate">
-                      {currentStoreName} | الطباعة المخصصة
+                      {currentStoreName} {language === 'ar' ? '| الطباعة المخصصة' : '| Custom Print'}
                     </span>
                     <span className="text-neutral-400 text-[10px] hover:text-neutral-600 ms-auto">
                       ×
@@ -326,7 +356,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                 <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs flex flex-col items-center justify-center gap-2">
                   <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
                   <span className="font-bold text-neutral-800 dark:text-neutral-200 text-xs">
-                    جاري رفع Favicon إلى Supabase Storage...
+                    {language === 'ar' ? 'جاري رفع Favicon إلى Supabase Storage...' : language === 'fr' ? 'Téléversement du Favicon...' : 'Uploading Favicon to Supabase Storage...'}
                   </span>
                 </div>
               )}
@@ -361,7 +391,11 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                   className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{settings.favicon_url ? 'استبدال الأيقونة' : 'رفع Favicon جديد'}</span>
+                  <span>
+                    {settings.favicon_url
+                      ? (language === 'ar' ? 'استبدال الأيقونة' : language === 'fr' ? 'Remplacer le Favicon' : 'Replace Favicon')
+                      : (language === 'ar' ? 'رفع Favicon جديد' : language === 'fr' ? 'Téléverser un Favicon' : 'Upload New Favicon')}
+                  </span>
                 </button>
 
                 {settings.favicon_url && (
@@ -373,19 +407,23 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                     className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 font-bold rounded-lg text-xs transition flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="w-3 h-3" />
-                    <span>إزالة</span>
+                    <span>{language === 'ar' ? 'إزالة' : language === 'fr' ? 'Supprimer' : 'Remove'}</span>
                   </button>
                 )}
               </div>
               <p className="text-[10px] text-neutral-400 mt-1.5">
-                صيغة مربعة 32x32 أو 64x64 بكسل (ICO أو PNG أو SVG - الحد الأقصى 2MB)
+                {language === 'ar'
+                  ? 'صيغة مربعة 32x32 أو 64x64 بكسل (ICO أو PNG أو SVG - الحد الأقصى 2MB)'
+                  : language === 'fr'
+                  ? 'Format carré 32x32 ou 64x64 px (ICO, PNG ou SVG - max 2 Mo)'
+                  : 'Square format 32x32 or 64x64 px (ICO, PNG or SVG - max 2MB)'}
               </p>
             </div>
 
             {/* Direct URL input fallback */}
             <div>
               <label className="block text-[11px] text-neutral-500 dark:text-neutral-400 mb-1">
-                رابط Favicon المباشر:
+                {language === 'ar' ? 'رابط Favicon المباشر:' : language === 'fr' ? 'URL direct du Favicon :' : 'Direct Favicon URL:'}
               </label>
               <input
                 type="text"
@@ -409,10 +447,14 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-black text-neutral-900 dark:text-white">
-              معلومات وهوية المتجر (Store Information)
+              {language === 'ar' ? 'معلومات وهوية المتجر (Store Information)' : language === 'fr' ? 'Informations de la Boutique' : 'Store Information'}
             </h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-              تظهر هذه البيانات في رأس الصفحة، التذييل، الفواتير، ورسائل البريد التلقائية
+              {language === 'ar'
+                ? 'تظهر هذه البيانات في رأس الصفحة، التذييل، الفواتير، ورسائل البريد التلقائية'
+                : language === 'fr'
+                ? 'Ces informations apparaissent dans l’en-tête, le pied de page, les factures et les e-mails'
+                : 'This data appears in the header, footer, invoices, and automated notifications'}
             </p>
           </div>
         </div>
@@ -420,7 +462,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1">
-              اسم المتجر (باللغة العربية):
+              {language === 'ar' ? 'اسم المتجر (باللغة العربية):' : language === 'fr' ? 'Nom du magasin (Arabe) :' : 'Store Name (Arabic):'}
             </label>
             <input
               type="text"
@@ -439,7 +481,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
 
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1">
-              اسم المتجر التجاري (English / Latin):
+              {language === 'ar' ? 'اسم المتجر التجاري (English / Latin):' : language === 'fr' ? 'Nom commercial (Latin) :' : 'Commercial Name (Latin):'}
             </label>
             <input
               type="text"
@@ -453,7 +495,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
 
         <div>
           <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1">
-            وصف المتجر والنشاط (Store Description & SEO):
+            {language === 'ar' ? 'وصف المتجر والنشاط (Store Description & SEO):' : language === 'fr' ? 'Description & Référencement (SEO) :' : 'Store Description & SEO:'}
           </label>
           <textarea
             rows={2}
@@ -465,7 +507,13 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
                 store_description: e.target.value,
               })
             }
-            placeholder="المنصة الجزائرية الرائدة في تصميم وطباعة التيشرتات والهوديز والمجات المخصصة بأعلى معايير الجودة والتوصيل السريع لـ 58 ولاية."
+            placeholder={
+              language === 'ar'
+                ? 'المنصة الجزائرية الرائدة في تصميم وطباعة التيشرتات والهوديز والمجات المخصصة بأعلى معايير الجودة والتوصيل السريع لـ 58 ولاية.'
+                : language === 'fr'
+                ? 'La référence algérienne pour la personnalisation textile et objets publicitaires, avec livraison sur 58 wilayas.'
+                : 'The premier Algerian platform for customized apparel and merchandise, with fast delivery to 58 wilayas.'
+            }
             className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white leading-relaxed"
           />
         </div>
@@ -473,7 +521,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1">
-              بادئة أرقام الطلبيات (Order Prefix):
+              {language === 'ar' ? 'بادئة أرقام الطلبيات (Order Prefix):' : language === 'fr' ? 'Préfixe des commandes :' : 'Order Number Prefix:'}
             </label>
             <input
               type="text"
@@ -488,28 +536,28 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
               className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white font-mono"
             />
             <span className="text-[10px] text-neutral-400 mt-0.5 block">
-              مثال: DZP-10023
+              {language === 'ar' ? 'مثال: DZP-10023' : 'Ex: DZP-10023'}
             </span>
           </div>
 
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1">
-              رمز العملة المعروضة (Currency):
+              {language === 'ar' ? 'رمز العملة المعروضة (Currency):' : language === 'fr' ? 'Devise :' : 'Currency Symbol:'}
             </label>
             <input
               type="text"
-              value={settings.currency || 'د.ج'}
+              value={settings.currency || (language === 'ar' ? 'د.ج' : 'DA')}
               onChange={e => setSettings({ ...settings, currency: e.target.value })}
               className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white font-bold"
             />
             <span className="text-[10px] text-neutral-400 mt-0.5 block">
-              الافتراضي: د.ج أو DZD
+              {language === 'ar' ? 'الافتراضي: د.ج أو DZD' : 'Default: DZD / DA'}
             </span>
           </div>
 
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1">
-              حد التوصيل المجاني (د.ج):
+              {language === 'ar' ? 'حد التوصيل المجاني (د.ج):' : language === 'fr' ? 'Seuil livraison gratuite (DA) :' : 'Free Delivery Threshold (DA):'}
             </label>
             <input
               type="number"
@@ -520,7 +568,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
               className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white font-mono"
             />
             <span className="text-[10px] text-neutral-400 mt-0.5 block">
-              توصيل مجاني للطلبات الأكبر من هذه القيمة
+              {language === 'ar' ? 'توصيل مجاني للطلبات الأكبر من هذه القيمة' : language === 'fr' ? 'Livraison offerte au-dessus de ce montant' : 'Free delivery for orders above this threshold'}
             </span>
           </div>
         </div>
@@ -536,10 +584,14 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-black text-neutral-900 dark:text-white">
-              بيانات الاتصال ومقر الورشة (Contact & Address)
+              {language === 'ar' ? 'بيانات الاتصال ومقر الورشة (Contact & Address)' : language === 'fr' ? 'Coordonnées & Atelier' : 'Contact & Workshop Location'}
             </h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-              تساعد الزبائن في التواصل المباشر مع خدمة العملاء وزيارة مقر الورشة
+              {language === 'ar'
+                ? 'تساعد الزبائن في التواصل المباشر مع خدمة العملاء وزيارة مقر الورشة'
+                : language === 'fr'
+                ? 'Permet aux clients de contacter le support et de visiter l’atelier'
+                : 'Enables customers to contact customer service and visit the workshop'}
             </p>
           </div>
         </div>
@@ -548,7 +600,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5 text-amber-500" />
-              رقم هاتف خدمة الزبائن:
+              {language === 'ar' ? 'رقم هاتف خدمة الزبائن:' : language === 'fr' ? 'Téléphone service client :' : 'Customer Service Phone:'}
             </label>
             <input
               type="text"
@@ -562,7 +614,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
-              رقم الواتساب (WhatsApp Business):
+              {language === 'ar' ? 'رقم الواتساب (WhatsApp Business):' : 'WhatsApp Business:'}
             </label>
             <input
               type="text"
@@ -582,7 +634,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5 text-blue-500" />
-              البريد الإلكتروني الرسمي:
+              {language === 'ar' ? 'البريد الإلكتروني الرسمي:' : language === 'fr' ? 'Email officiel :' : 'Official Email:'}
             </label>
             <input
               type="email"
@@ -598,13 +650,13 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-red-500" />
-              عنوان مقر الورشة / الاستلام:
+              {language === 'ar' ? 'عنوان مقر الورشة / الاستلام:' : language === 'fr' ? 'Adresse de l’atelier :' : 'Workshop / Pickup Address:'}
             </label>
             <input
               type="text"
               value={settings.address || ''}
               onChange={e => setSettings({ ...settings, address: e.target.value })}
-              placeholder="الجزائر العاصمة، بئر مراد رايس، الجزائر"
+              placeholder={language === 'ar' ? 'الجزائر العاصمة، بئر مراد رايس، الجزائر' : 'Algiers, Bir Mourad Raïs, Algeria'}
               className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
             />
           </div>
@@ -612,13 +664,13 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-purple-500" />
-              أوقات العمل واستقبال الطلبات:
+              {language === 'ar' ? 'أوقات العمل واستقبال الطلبات:' : language === 'fr' ? 'Horaires d’ouverture :' : 'Working Hours:'}
             </label>
             <input
               type="text"
               value={settings.working_hours || ''}
               onChange={e => setSettings({ ...settings, working_hours: e.target.value })}
-              placeholder="السبت - الخميس: 9:00 صباحاً - 6:00 مساءً"
+              placeholder={language === 'ar' ? 'السبت - الخميس: 9:00 صباحاً - 6:00 مساءً' : language === 'fr' ? 'Sam - Jeu : 9h00 - 18h00' : 'Sat - Thu: 9:00 AM - 6:00 PM'}
               className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-white"
             />
           </div>
@@ -635,10 +687,14 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-black text-neutral-900 dark:text-white">
-              روابط شبكات التواصل الاجتماعي (Social Media Links)
+              {language === 'ar' ? 'روابط شبكات التواصل الاجتماعي (Social Media Links)' : language === 'fr' ? 'Réseaux Sociaux' : 'Social Media Links'}
             </h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-              تظهر روابط حسابات متجرك في تذييل الموقع وأزرار التواصل السريع
+              {language === 'ar'
+                ? 'تظهر روابط حسابات متجرك في تذييل الموقع وأزرار التواصل السريع'
+                : language === 'fr'
+                ? 'Ces liens apparaissent dans le pied de page et les boutons de contact'
+                : 'These links appear in the website footer and quick contact buttons'}
             </p>
           </div>
         </div>
@@ -647,7 +703,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-600" />
-              رابط صفحة فيسبوك (Facebook Page):
+              {language === 'ar' ? 'رابط صفحة فيسبوك (Facebook Page):' : 'Facebook Page URL:'}
             </label>
             <input
               type="url"
@@ -667,7 +723,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-pink-500" />
-              رابط حساب إنستغرام (Instagram Profile):
+              {language === 'ar' ? 'رابط حساب إنستغرام (Instagram Profile):' : 'Instagram Profile URL:'}
             </label>
             <input
               type="url"
@@ -687,7 +743,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-neutral-900 dark:bg-white" />
-              رابط حساب تيك توك (TikTok Profile):
+              {language === 'ar' ? 'رابط حساب تيك توك (TikTok Profile):' : 'TikTok Profile URL:'}
             </label>
             <input
               type="url"
@@ -707,7 +763,7 @@ export const AdminStoreSettings: React.FC<AdminStoreSettingsProps> = ({
           <div>
             <label className="block text-neutral-700 dark:text-neutral-300 font-bold mb-1 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-sky-500" />
-              رابط قناة أو بوت تيليجرام (Telegram):
+              {language === 'ar' ? 'رابط قناة أو بوت تيليجرام (Telegram):' : 'Telegram URL:'}
             </label>
             <input
               type="url"
