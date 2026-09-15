@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. ENUMS & DOMAINS
 DO $$ BEGIN
-  CREATE TYPE user_role AS ENUM ('admin', 'staff', 'customer');
+  CREATE TYPE user_role AS ENUM ('owner', 'admin', 'staff', 'customer');
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
@@ -218,7 +218,8 @@ CREATE TABLE IF NOT EXISTS public.delivery_rates (
 -- 12. COUPONS
 CREATE TABLE IF NOT EXISTS public.coupons (
   id TEXT PRIMARY KEY,
-  code TEXT UNIQUE NOT NULL,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default' NOT NULL,
+  code TEXT NOT NULL,
   type coupon_type DEFAULT 'percentage' NOT NULL,
   value NUMERIC(10, 2) NOT NULL CHECK (value > 0),
   min_order NUMERIC(10, 2) DEFAULT 0 NOT NULL,
@@ -227,12 +228,14 @@ CREATE TABLE IF NOT EXISTS public.coupons (
   times_used INTEGER DEFAULT 0 NOT NULL,
   expiry_date TIMESTAMPTZ,
   active BOOLEAN DEFAULT true NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(store_id, code)
 );
 
 -- 13. ORDERS
 CREATE TABLE IF NOT EXISTS public.orders (
   id TEXT PRIMARY KEY,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default' NOT NULL,
   order_number TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
   phone TEXT NOT NULL,
@@ -314,6 +317,7 @@ CREATE TABLE IF NOT EXISTS public.faqs (
 -- 18. SITE SETTINGS & CMS
 CREATE TABLE IF NOT EXISTS public.site_settings (
   id TEXT PRIMARY KEY,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default' NOT NULL,
   store_name TEXT DEFAULT 'ديزاد برينت | DZPrint' NOT NULL,
   phone TEXT DEFAULT '0550 12 34 56' NOT NULL,
   email TEXT DEFAULT 'contact@dzprint.dz' NOT NULL,
@@ -326,6 +330,7 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
 
 CREATE TABLE IF NOT EXISTS public.homepage_cms (
   id TEXT PRIMARY KEY,
+  store_id TEXT REFERENCES public.stores(id) ON DELETE CASCADE DEFAULT 'store-dzprint-default' NOT NULL,
   hero_title TEXT,
   hero_subtitle TEXT,
   hero_badge TEXT,
@@ -349,9 +354,11 @@ CREATE TABLE IF NOT EXISTS public.email_templates (
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON public.orders(phone);
 CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders(order_number);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_store_id ON public.orders(store_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_rates_agency_wilaya ON public.delivery_rates(agency_id, wilaya_id);
 CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
 CREATE INDEX IF NOT EXISTS idx_products_active ON public.products(active);
+CREATE INDEX IF NOT EXISTS idx_products_store_id ON public.products(store_id);
 CREATE INDEX IF NOT EXISTS idx_designs_active ON public.designs(active);
 
 -- ============================================================
@@ -359,6 +366,7 @@ CREATE INDEX IF NOT EXISTS idx_designs_active ON public.designs(active);
 -- ============================================================
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
@@ -376,9 +384,10 @@ ALTER TABLE public.faqs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.homepage_cms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.landing_sections ENABLE ROW LEVEL SECURITY;
 
--- Helper function to check if user is admin
-CREATE OR REPLACE FUNCTION public.is_admin()
+-- Helper functions for store authorization
+CREATE OR REPLACE FUNCTION public.is_platform_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN EXISTS (
@@ -388,7 +397,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Public read policies for storefront
+CREATE OR REPLACE FUNCTION public.is_store_member(target_store_id TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() 
+      AND (
+        (role IN ('owner', 'admin', 'staff') AND store_id = target_store_id)
+        OR role = 'admin'
+      )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Profiles policies
+CREATE POLICY "Users can view and update own profile" ON public.profiles
+  FOR ALL USING (auth.uid() = id OR auth.role() = 'service_role');
+
+-- Stores policies
+CREATE POLICY "Public can view active stores" ON public.stores
+  FOR SELECT USING (is_active = true);
+CREATE POLICY "Store owners and staff can manage their store" ON public.stores
+  FOR ALL USING (
+    auth.role() = 'service_role' OR
+    owner_id = auth.uid() OR
+    public.is_store_member(id)
+  );
+
+-- Storefront Public Read Policies
 CREATE POLICY "Public can view active categories" ON public.categories FOR SELECT USING (active = true);
 CREATE POLICY "Public can view active products" ON public.products FOR SELECT USING (active = true);
 CREATE POLICY "Public can view active product variants" ON public.product_variants FOR SELECT USING (active = true);
@@ -400,45 +437,71 @@ CREATE POLICY "Public can view approved testimonials" ON public.testimonials FOR
 CREATE POLICY "Public can view faqs" ON public.faqs FOR SELECT USING (true);
 CREATE POLICY "Public can view site settings" ON public.site_settings FOR SELECT USING (true);
 CREATE POLICY "Public can view homepage cms" ON public.homepage_cms FOR SELECT USING (true);
+CREATE POLICY "Public can view published landing sections" ON public.landing_sections FOR SELECT USING (is_published = true AND is_visible = true);
 
--- Customer order policies (customers can create orders)
+-- Orders: SECURE creation & restricted view (NO public SELECT true!)
 CREATE POLICY "Anyone can create order" ON public.orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Anyone can create order items" ON public.order_items FOR INSERT WITH CHECK (true);
 CREATE POLICY "Anyone can create order status history" ON public.order_status_history FOR INSERT WITH CHECK (true);
 
--- Customer can track their own order by matching phone & order number
-CREATE POLICY "Customers can track order" ON public.orders FOR SELECT
-USING (
-  auth.role() = 'service_role' OR
-  public.is_admin() OR
-  true -- Public read is constrained by query on backend or serverless proxy
-);
+CREATE POLICY "Store staff can view and manage their store orders" ON public.orders
+  FOR ALL USING (
+    auth.role() = 'service_role' OR
+    public.is_store_member(store_id)
+  );
 
--- Full access for service_role and verified admins
-CREATE POLICY "Admin full access categories" ON public.categories FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access products" ON public.products FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access product_variants" ON public.product_variants FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access designs" ON public.designs FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access wilayas" ON public.wilayas FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access delivery_agencies" ON public.delivery_agencies FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access delivery_rates" ON public.delivery_rates FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access coupons" ON public.coupons FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access orders" ON public.orders FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access order_items" ON public.order_items FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access order_status_history" ON public.order_status_history FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access testimonials" ON public.testimonials FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access faqs" ON public.faqs FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access site_settings" ON public.site_settings FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access homepage_cms" ON public.homepage_cms FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
-CREATE POLICY "Admin full access email_templates" ON public.email_templates FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Store staff can manage order items" ON public.order_items
+  FOR ALL USING (
+    auth.role() = 'service_role' OR
+    EXISTS (
+      SELECT 1 FROM public.orders o
+      WHERE o.id = order_items.order_id AND public.is_store_member(o.store_id)
+    )
+  );
 
--- Multi-store & Landing page RLS policies
-ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.landing_sections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Store staff can manage status history" ON public.order_status_history
+  FOR ALL USING (
+    auth.role() = 'service_role' OR
+    EXISTS (
+      SELECT 1 FROM public.orders o
+      WHERE o.id = order_status_history.order_id AND public.is_store_member(o.store_id)
+    )
+  );
 
-CREATE POLICY "Public can view active stores" ON public.stores FOR SELECT USING (is_active = true);
-CREATE POLICY "Admin and owner full access stores" ON public.stores FOR ALL USING (public.is_admin() OR auth.uid() = owner_id OR auth.role() = 'service_role');
+-- Store-scoped Management Policies
+CREATE POLICY "Store staff manage categories" ON public.categories
+  FOR ALL USING (auth.role() = 'service_role' OR public.is_store_member(store_id));
 
-CREATE POLICY "Public can view published landing sections" ON public.landing_sections FOR SELECT USING (is_published = true AND is_visible = true);
-CREATE POLICY "Admin and owner full access landing sections" ON public.landing_sections FOR ALL USING (public.is_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Store staff manage products" ON public.products
+  FOR ALL USING (auth.role() = 'service_role' OR public.is_store_member(store_id));
+
+CREATE POLICY "Store staff manage product variants" ON public.product_variants
+  FOR ALL USING (
+    auth.role() = 'service_role' OR
+    EXISTS (
+      SELECT 1 FROM public.products p
+      WHERE p.id = product_variants.product_id AND public.is_store_member(p.store_id)
+    )
+  );
+
+CREATE POLICY "Store staff manage coupons" ON public.coupons
+  FOR ALL USING (auth.role() = 'service_role' OR public.is_store_member(store_id));
+
+CREATE POLICY "Store staff manage site settings" ON public.site_settings
+  FOR ALL USING (auth.role() = 'service_role' OR public.is_store_member(store_id));
+
+CREATE POLICY "Store staff manage homepage cms" ON public.homepage_cms
+  FOR ALL USING (auth.role() = 'service_role' OR public.is_store_member(store_id));
+
+CREATE POLICY "Store staff manage landing sections" ON public.landing_sections
+  FOR ALL USING (auth.role() = 'service_role' OR public.is_store_member(store_id));
+
+-- Admin full access for platform assets
+CREATE POLICY "Admin full access designs" ON public.designs FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Admin full access wilayas" ON public.wilayas FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Admin full access delivery_agencies" ON public.delivery_agencies FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Admin full access delivery_rates" ON public.delivery_rates FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Admin full access testimonials" ON public.testimonials FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Admin full access faqs" ON public.faqs FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
+CREATE POLICY "Admin full access email_templates" ON public.email_templates FOR ALL USING (public.is_platform_admin() OR auth.role() = 'service_role');
 

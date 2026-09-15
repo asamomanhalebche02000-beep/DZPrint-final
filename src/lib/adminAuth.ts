@@ -1,45 +1,25 @@
-let currentAdminToken: string | null = null;
+import { supabase } from './supabase';
 
-export function setAdminToken(token: string | null) {
-  currentAdminToken = token;
-  if (typeof window !== 'undefined') {
-    if (token) {
-      sessionStorage.setItem('dzprint_admin_token', token);
-    } else {
-      sessionStorage.removeItem('dzprint_admin_token');
-    }
+/**
+ * Retrieves the current Supabase access token directly from the authenticated session.
+ * Never generates or returns mock or fake tokens.
+ */
+export async function getAuthToken(): Promise<string | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  } catch {
+    return null;
   }
-}
-
-export function getAdminToken(): string | null {
-  if (currentAdminToken) return currentAdminToken;
-  if (typeof window !== 'undefined') {
-    const stored = sessionStorage.getItem('dzprint_admin_token');
-    if (stored) {
-      currentAdminToken = stored;
-      return stored;
-    }
-  }
-  return null;
-}
-
-export function getAdminHeaders(customHeaders: HeadersInit = {}): HeadersInit {
-  const token = getAdminToken();
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return {
-    ...headers,
-    ...customHeaders,
-  };
 }
 
 /**
- * Dedicated fetch helper for admin API routes that safely attaches Bearer authorization
+ * Dedicated fetch helper for admin & authenticated API routes.
+ * Obtains the current Supabase access token from the authenticated session
+ * and securely attaches Bearer authorization. Never uses fake tokens.
  */
 export async function adminFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const token = getAdminToken();
+  const token = await getAuthToken();
   const options = init || {};
   const headers = new Headers(options.headers || {});
   

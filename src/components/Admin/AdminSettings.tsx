@@ -26,7 +26,7 @@ import {
   Store,
 } from 'lucide-react';
 import { SiteSettings } from '../../types';
-import { adminFetch, getAdminToken } from '../../lib/adminAuth';
+import { adminFetch } from '../../lib/adminAuth';
 import { useSiteSettings } from '../../context/SettingsContext';
 import { useTheme } from '../../context/ThemeContext';
 import { AdminStoreSettings } from './AdminStoreSettings';

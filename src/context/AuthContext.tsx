@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Profile, Store } from '../types';
-import { setAdminToken } from '../lib/adminAuth';
 
 interface SignUpParams {
   fullName: string;
