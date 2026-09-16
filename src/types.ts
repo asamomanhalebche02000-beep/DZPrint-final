@@ -37,14 +37,17 @@ export interface DeliveryRate {
 
 export type ProductCategory = 't-shirts' | 'hoodies' | 'mugs' | 'totebags' | 'caps';
 
+export type UserRole = 'owner' | 'admin' | 'staff' | 'customer';
+
 export interface Profile {
   id: string;
   email: string;
   full_name?: string;
   phone?: string;
-  role: 'owner' | 'admin' | 'staff' | 'customer';
+  role: UserRole;
   store_id?: string;
   avatar_url?: string;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -58,6 +61,7 @@ export interface Store {
   name_fr?: string;
   name_en?: string;
   business_name?: string;
+  domain?: string;
   logo?: string;
   favicon?: string;
   phone: string;
@@ -267,6 +271,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  store_id?: string;
   order_number: string; // e.g. "PRINT-2026-000001"
   customer_id?: string;
   full_name: string;

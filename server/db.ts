@@ -17,6 +17,7 @@ import {
   ProductionStage,
   Invoice,
   Store,
+  Profile,
   LandingSection,
   LandingPageData,
 } from '../src/types';
@@ -1163,6 +1164,28 @@ class MemoryStore {
   coupons: Coupon[] = [...INITIAL_COUPONS];
   orders: Order[] = [];
   settings: SiteSettings = { ...INITIAL_SETTINGS };
+  storeSettings: Record<string, SiteSettings> = {
+    'store-dzprint-default': { ...INITIAL_SETTINGS },
+  };
+  stores: Store[] = [
+    {
+      id: 'store-dzprint-default',
+      owner_id: 'user-default-owner',
+      name: 'DZPrint Custom Printing',
+      slug: 'dzprint-default',
+      phone: '0550 12 34 56',
+      whatsapp: '+213 550 12 34 56',
+      email: 'contact@dzprint.dz',
+      address: 'الجزائر العاصمة، الجزائر',
+      description: 'المنصة الجزائرية الرائدة في تصميم وطباعة التيشرتات والهوديز والمجات المخصصة',
+      default_language: 'ar',
+      supported_languages: ['ar', 'fr', 'en'],
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+  profiles: Profile[] = [];
   cms: HomepageCMS = { ...INITIAL_CMS };
   customers: Customer[] = [...INITIAL_CUSTOMERS];
   suppliers: Supplier[] = [...INITIAL_SUPPLIERS];
@@ -1357,12 +1380,13 @@ export class Database {
   }
 
   // 4. Products
-  static async getProducts(activeOnly = false): Promise<Product[]> {
+  static async getProducts(activeOnly = false, storeId?: string): Promise<Product[]> {
     const client = getServerSupabase();
     if (client) {
       try {
         let query = client.from('products').select('*');
         if (activeOnly) query = query.eq('active', true);
+        if (storeId) query = query.eq('store_id', storeId);
         const { data, error } = await query;
         if (!error && data && data.length > 0) {
           return data;
@@ -1371,27 +1395,37 @@ export class Database {
         console.warn('[Supabase getProducts fallback]:', err.message);
       }
     }
-    return activeOnly ? memoryStore.products.filter(p => p.active) : memoryStore.products;
+    let list = memoryStore.products;
+    if (storeId) {
+      list = list.filter(p => p.store_id === storeId || (!p.store_id && storeId === 'store-dzprint-default'));
+    }
+    return activeOnly ? list.filter(p => p.active) : list;
   }
 
-  static async getProductById(id: string): Promise<Product | null> {
+  static async getProductById(id: string, storeId?: string): Promise<Product | null> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { data, error } = await client
-          .from('products')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
+        let query = client.from('products').select('*').eq('id', id);
+        if (storeId) query = query.eq('store_id', storeId);
+        const { data, error } = await query.maybeSingle();
         if (!error && data) return data;
       } catch (err: any) {
         console.warn('[Supabase getProductById fallback]:', err.message);
       }
     }
-    return memoryStore.products.find(p => p.id === id) || null;
+    const found = memoryStore.products.find(p => p.id === id);
+    if (!found) return null;
+    if (storeId && found.store_id && found.store_id !== storeId) return null;
+    return found;
   }
 
-  static async saveProduct(product: Product): Promise<Product> {
+  static async saveProduct(product: Product, storeId?: string): Promise<Product> {
+    if (storeId) {
+      product.store_id = storeId;
+    } else if (!product.store_id) {
+      product.store_id = 'store-dzprint-default';
+    }
     const client = getServerSupabase();
     if (client) {
       try {
@@ -1414,17 +1448,23 @@ export class Database {
     return product;
   }
 
-  static async deleteProduct(id: string): Promise<boolean> {
+  static async deleteProduct(id: string, storeId?: string): Promise<boolean> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { error } = await client.from('products').delete().eq('id', id);
+        let query = client.from('products').delete().eq('id', id);
+        if (storeId) query = query.eq('store_id', storeId);
+        const { error } = await query;
         if (!error) return true;
       } catch (err: any) {
         console.warn('[Supabase deleteProduct fallback]:', err.message);
       }
     }
-    const idx = memoryStore.products.findIndex(p => p.id === id);
+    const idx = memoryStore.products.findIndex(p => {
+      if (p.id !== id) return false;
+      if (storeId && p.store_id && p.store_id !== storeId) return false;
+      return true;
+    });
     if (idx >= 0) {
       memoryStore.products.splice(idx, 1);
       return true;
@@ -1433,12 +1473,13 @@ export class Database {
   }
 
   // 5. Designs
-  static async getDesigns(activeOnly = false): Promise<Design[]> {
+  static async getDesigns(activeOnly = false, storeId?: string): Promise<Design[]> {
     const client = getServerSupabase();
     if (client) {
       try {
         let query = client.from('designs').select('*');
         if (activeOnly) query = query.eq('active', true);
+        if (storeId) query = query.eq('store_id', storeId);
         const { data, error } = await query;
         if (!error && data && data.length > 0) {
           return data;
@@ -1447,7 +1488,11 @@ export class Database {
         console.warn('[Supabase getDesigns fallback]:', err.message);
       }
     }
-    return activeOnly ? memoryStore.designs.filter(d => d.active) : memoryStore.designs;
+    let list = memoryStore.designs;
+    if (storeId) {
+      list = list.filter(d => (d as any).store_id === storeId || (!(d as any).store_id && storeId === 'store-dzprint-default'));
+    }
+    return activeOnly ? list.filter(d => d.active) : list;
   }
 
   static async getDesignById(id: string): Promise<Design | null> {
@@ -1509,11 +1554,13 @@ export class Database {
   }
 
   // 6. Coupons
-  static async getCoupons(): Promise<Coupon[]> {
+  static async getCoupons(storeId?: string): Promise<Coupon[]> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { data, error } = await client.from('coupons').select('*');
+        let query = client.from('coupons').select('*');
+        if (storeId) query = query.eq('store_id', storeId);
+        const { data, error } = await query;
         if (!error && data && data.length > 0) {
           return data;
         }
@@ -1521,7 +1568,11 @@ export class Database {
         console.warn('[Supabase getCoupons fallback]:', err.message);
       }
     }
-    return memoryStore.coupons;
+    let list = memoryStore.coupons;
+    if (storeId) {
+      list = list.filter(c => (c as any).store_id === storeId || (!(c as any).store_id && storeId === 'store-dzprint-default'));
+    }
+    return list;
   }
 
   static async getCouponByCode(code: string): Promise<Coupon | null> {
@@ -1594,18 +1645,21 @@ export class Database {
     return `DZ-${year}-${randomSuffix}`;
   }
 
-  static async getOrders(): Promise<Order[]> {
+  static async getOrders(storeId?: string): Promise<Order[]> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { data, error } = await client
+        let query = client
           .from('orders')
           .select(`
             *,
             items:order_items(*),
             status_history:order_status_history(*)
-          `)
-          .order('created_at', { ascending: false });
+          `);
+        if (storeId) {
+          query = query.eq('store_id', storeId);
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
         if (!error && data) {
           return data;
         }
@@ -1613,7 +1667,11 @@ export class Database {
         console.warn('[Supabase getOrders fallback]:', err.message);
       }
     }
-    return memoryStore.orders.slice().reverse();
+    let list = memoryStore.orders.slice().reverse();
+    if (storeId) {
+      list = list.filter(o => o.store_id === storeId || (!o.store_id && storeId === 'store-dzprint-default'));
+    }
+    return list;
   }
 
   static async getOrderById(id: string): Promise<Order | null> {
@@ -1771,41 +1829,49 @@ export class Database {
   }
 
   // 8. Site Settings & CMS
-  static async getSettings(): Promise<SiteSettings> {
+  static async getSettings(storeId: string = 'store-dzprint-default'): Promise<SiteSettings> {
+    const settingsId = storeId === 'store-dzprint-default' ? 'main_settings' : `settings-${storeId}`;
     const client = getServerSupabase();
     if (client) {
       try {
         const { data, error } = await client
           .from('site_settings')
           .select('*')
-          .eq('id', 'main_settings')
+          .eq('id', settingsId)
           .maybeSingle();
         if (!error && data) {
+          const baseSettings = memoryStore.storeSettings[storeId] || memoryStore.settings;
           const merged: SiteSettings = {
-            ...memoryStore.settings,
+            ...baseSettings,
             ...data,
-            store_name: data.store_name || data.business_name_ar || data.business_name || memoryStore.settings.store_name,
-            business_name: data.business_name || data.store_name || memoryStore.settings.business_name,
-            business_name_ar: data.business_name_ar || data.store_name || memoryStore.settings.business_name_ar,
-            store_description: data.store_description || memoryStore.settings.store_description,
-            store_description_ar: data.store_description_ar || memoryStore.settings.store_description_ar,
+            store_name: data.store_name || data.business_name_ar || data.business_name || baseSettings.store_name,
+            business_name: data.business_name || data.store_name || baseSettings.business_name,
+            business_name_ar: data.business_name_ar || data.store_name || baseSettings.business_name_ar,
+            store_description: data.store_description || baseSettings.store_description,
+            store_description_ar: data.store_description_ar || baseSettings.store_description_ar,
           };
-          memoryStore.settings = merged;
+          memoryStore.storeSettings[storeId] = merged;
+          if (storeId === 'store-dzprint-default') memoryStore.settings = merged;
           return merged;
         }
       } catch (err: any) {
         console.warn('[Supabase getSettings fallback]:', err.message);
       }
     }
-    return memoryStore.settings;
+    if (!memoryStore.storeSettings[storeId]) {
+      memoryStore.storeSettings[storeId] = { ...memoryStore.settings };
+    }
+    return memoryStore.storeSettings[storeId];
   }
 
-  static async updateSettings(data: Partial<SiteSettings>): Promise<SiteSettings> {
+  static async updateSettings(data: Partial<SiteSettings>, storeId: string = 'store-dzprint-default'): Promise<SiteSettings> {
+    const settingsId = storeId === 'store-dzprint-default' ? 'main_settings' : `settings-${storeId}`;
     const client = getServerSupabase();
     if (client) {
       try {
         const payload: Record<string, any> = {
-          id: 'main_settings',
+          id: settingsId,
+          store_id: storeId,
           ...data,
           updated_at: new Date().toISOString(),
         };
@@ -1819,8 +1885,11 @@ export class Database {
           .select()
           .single();
         if (!error && updated) {
-          memoryStore.settings = { ...memoryStore.settings, ...updated };
-          return memoryStore.settings;
+          const current = memoryStore.storeSettings[storeId] || memoryStore.settings;
+          const merged = { ...current, ...updated };
+          memoryStore.storeSettings[storeId] = merged;
+          if (storeId === 'store-dzprint-default') memoryStore.settings = merged;
+          return merged;
         } else if (error) {
           console.warn('[Supabase updateSettings warning, updating memoryStore]:', error.message);
         }
@@ -1828,8 +1897,11 @@ export class Database {
         console.warn('[Supabase updateSettings fallback]:', err.message);
       }
     }
-    memoryStore.settings = { ...memoryStore.settings, ...data };
-    return memoryStore.settings;
+    const current = memoryStore.storeSettings[storeId] || memoryStore.settings;
+    const merged = { ...current, ...data };
+    memoryStore.storeSettings[storeId] = merged;
+    if (storeId === 'store-dzprint-default') memoryStore.settings = merged;
+    return merged;
   }
 
   static async getHomepageCMS(): Promise<HomepageCMS> {
@@ -1870,11 +1942,13 @@ export class Database {
   // ============================================================
   // 9. CRM / CUSTOMERS
   // ============================================================
-  static async getCustomers(): Promise<Customer[]> {
+  static async getCustomers(storeId?: string): Promise<Customer[]> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { data, error } = await client.from('customers').select('*').order('total_spent', { ascending: false });
+        let query = client.from('customers').select('*');
+        if (storeId) query = query.eq('store_id', storeId);
+        const { data, error } = await query.order('total_spent', { ascending: false });
         if (!error && data && data.length > 0) {
           return data;
         }
@@ -1883,7 +1957,10 @@ export class Database {
       }
     }
 
-    // Dynamic aggregation: Merge any placed orders that might not be in customers list yet
+    let customerList = memoryStore.customers;
+    if (storeId) {
+      customerList = customerList.filter(c => (c as any).store_id === storeId || (!(c as any).store_id && storeId === 'store-dzprint-default'));
+    }
     const existingPhones = new Set(memoryStore.customers.map(c => c.phone.replace(/[^0-9]/g, '')));
     for (const order of memoryStore.orders) {
       const cleanPhone = order.phone.replace(/[^0-9]/g, '');
@@ -1953,11 +2030,13 @@ export class Database {
   // ============================================================
   // 10. INVENTORY & SUPPLY CHAIN
   // ============================================================
-  static async getInventoryItems(): Promise<InventoryItem[]> {
+  static async getInventoryItems(storeId?: string): Promise<InventoryItem[]> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { data, error } = await client.from('inventory_items').select('*').order('category', { ascending: true });
+        let query = client.from('inventory_items').select('*');
+        if (storeId) query = query.eq('store_id', storeId);
+        const { data, error } = await query.order('category', { ascending: true });
         if (!error && data && data.length > 0) {
           return data;
         }
@@ -1965,7 +2044,11 @@ export class Database {
         console.warn('[Supabase getInventoryItems fallback]:', err.message);
       }
     }
-    return memoryStore.inventory;
+    let list = memoryStore.inventory;
+    if (storeId) {
+      list = list.filter(i => (i as any).store_id === storeId || (!(i as any).store_id && storeId === 'store-dzprint-default'));
+    }
+    return list;
   }
 
   static async getInventoryItemById(id: string): Promise<InventoryItem | null> {
@@ -2236,11 +2319,13 @@ export class Database {
   // ============================================================
   // 13. INVOICES & QUOTATIONS (Factures & Devis)
   // ============================================================
-  static async getInvoices(): Promise<Invoice[]> {
+  static async getInvoices(storeId?: string): Promise<Invoice[]> {
     const client = getServerSupabase();
     if (client) {
       try {
-        const { data, error } = await client.from('invoices').select('*').order('created_at', { ascending: false });
+        let query = client.from('invoices').select('*');
+        if (storeId) query = query.eq('store_id', storeId);
+        const { data, error } = await query.order('created_at', { ascending: false });
         if (!error && data && data.length > 0) {
           return data;
         }
@@ -2248,7 +2333,11 @@ export class Database {
         console.warn('[Supabase getInvoices fallback]:', err.message);
       }
     }
-    return memoryStore.invoices;
+    let list = memoryStore.invoices;
+    if (storeId) {
+      list = list.filter(inv => (inv as any).store_id === storeId || (!(inv as any).store_id && storeId === 'store-dzprint-default'));
+    }
+    return list;
   }
 
   static async getInvoiceById(id: string): Promise<Invoice | null> {
@@ -2426,5 +2515,122 @@ export class Database {
     memoryStore.landingPublished[storeId] = [...toPublish];
     memoryStore.landingDraft[storeId] = [...toPublish];
     return toPublish;
+  }
+
+  static async resetLandingToInitial(storeId = 'store-dzprint-default'): Promise<LandingSection[]> {
+    const initialCopy = [...INITIAL_LANDING_SECTIONS];
+    return await this.publishLandingSections(initialCopy, storeId);
+  }
+
+  // 17. Multi-Store & Profiles
+  static async getStores(): Promise<Store[]> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('stores').select('*').order('created_at', { ascending: true });
+        if (!error && data && data.length > 0) return data;
+      } catch (err: any) {
+        console.warn('[Supabase getStores fallback]:', err.message);
+      }
+    }
+    return memoryStore.stores;
+  }
+
+  static async getStoreById(id: string): Promise<Store | null> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('stores').select('*').eq('id', id).maybeSingle();
+        if (!error && data) return data;
+      } catch (err: any) {
+        console.warn('[Supabase getStoreById fallback]:', err.message);
+      }
+    }
+    return memoryStore.stores.find(s => s.id === id) || null;
+  }
+
+  static async getStoreBySlug(slug: string): Promise<Store | null> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('stores').select('*').eq('slug', slug).maybeSingle();
+        if (!error && data) return data;
+      } catch (err: any) {
+        console.warn('[Supabase getStoreBySlug fallback]:', err.message);
+      }
+    }
+    return memoryStore.stores.find(s => s.slug === slug) || null;
+  }
+
+  static async saveStore(store: Store): Promise<Store> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('stores')
+          .upsert(store)
+          .select()
+          .single();
+        if (!error && data) return data;
+      } catch (err: any) {
+        console.warn('[Supabase saveStore fallback]:', err.message);
+      }
+    }
+    const idx = memoryStore.stores.findIndex(s => s.id === store.id);
+    if (idx >= 0) {
+      memoryStore.stores[idx] = { ...memoryStore.stores[idx], ...store };
+    } else {
+      memoryStore.stores.push(store);
+    }
+    return store;
+  }
+
+  static async getProfiles(): Promise<Profile[]> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('profiles').select('*');
+        if (!error && data) return data;
+      } catch (err: any) {
+        console.warn('[Supabase getProfiles fallback]:', err.message);
+      }
+    }
+    return memoryStore.profiles;
+  }
+
+  static async getProfileById(id: string): Promise<Profile | null> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('profiles').select('*').eq('id', id).maybeSingle();
+        if (!error && data) return data;
+      } catch (err: any) {
+        console.warn('[Supabase getProfileById fallback]:', err.message);
+      }
+    }
+    return memoryStore.profiles.find(p => p.id === id) || null;
+  }
+
+  static async saveProfile(profile: Profile): Promise<Profile> {
+    const client = getServerSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('profiles')
+          .upsert(profile)
+          .select()
+          .single();
+        if (!error && data) return data;
+      } catch (err: any) {
+        console.warn('[Supabase saveProfile fallback]:', err.message);
+      }
+    }
+    const idx = memoryStore.profiles.findIndex(p => p.id === profile.id);
+    if (idx >= 0) {
+      memoryStore.profiles[idx] = { ...memoryStore.profiles[idx], ...profile };
+    } else {
+      memoryStore.profiles.push(profile);
+    }
+    return profile;
   }
 }

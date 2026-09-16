@@ -28,7 +28,6 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { getAdminToken, setAdminToken } from '../../lib/adminAuth';
 import { AdminOrders } from './AdminOrders';
 import { AdminCustomers } from './AdminCustomers';
 import { AdminInventory } from './AdminInventory';
@@ -64,7 +63,7 @@ interface AdminViewProps {
 
 export const AdminView: React.FC<AdminViewProps> = ({ onBackToStore }) => {
   const { t, isRtl, language } = useTheme();
-  const { user, profile, store, isAuthenticated: authContextLoggedIn, signIn, signUp, signOut } = useAuth();
+  const { user, profile, store, isAuthenticated, signIn, signUp, signOut, role, loading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('orders');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -78,7 +77,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBackToStore }) => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
-  const isLoggedIn = authContextLoggedIn || Boolean(getAdminToken());
+  const isAuthorizedRole = role === 'owner' || role === 'admin' || role === 'staff';
+  const isLoggedIn = isAuthenticated && isAuthorizedRole;
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,28 +118,59 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBackToStore }) => {
     }
   };
 
-  const handleQuickAdminLogin = async () => {
-    setIsLoading(true);
-    setAuthError(null);
-    try {
-      const res = await signIn('admin@dzprint.dz', 'admin123');
-      if (!res.success) {
-        // Fallback to legacy master token
-        setAdminToken(`dzprint-admin-master-${Date.now()}`);
-        window.location.reload();
-      }
-    } catch {
-      setAdminToken(`dzprint-admin-master-${Date.now()}`);
-      window.location.reload();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleLogout = async () => {
     await signOut();
-    setAdminToken(null);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+          <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+            {language === 'ar' ? 'جارٍ التحقق من الجلسة والصلاحيات...' : 'Verifying session...'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Access Denied Screen if user is logged in as a normal customer without store staff permissions
+  if (isAuthenticated && !isAuthorizedRole) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-xl p-8 space-y-6 text-center">
+          <div className="w-14 h-14 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-neutral-900 dark:text-white">
+              {language === 'ar' ? 'غير مصرح بالوصول إلى لوحة الإدارة' : 'Access Restricted'}
+            </h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+              {language === 'ar'
+                ? `الحساب الحالي (${user?.email}) ليس لديه صلاحيات صاحب متجر أو مشرف.`
+                : `Your account (${user?.email}) does not have store owner or staff permissions.`}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <button
+              onClick={handleLogout}
+              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition shadow-xs cursor-pointer"
+            >
+              {language === 'ar' ? 'تسجيل الخروج والتبديل إلى حساب آخر' : 'Sign out & switch account'}
+            </button>
+            <button
+              onClick={onBackToStore}
+              className="w-full py-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl transition cursor-pointer"
+            >
+              {t.back_to_store}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Login Screen if not authenticated
   if (!isLoggedIn) {
@@ -190,45 +221,6 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBackToStore }) => {
               {t.auth_create_account}
             </button>
           </div>
-
-          {/* Quick Access Credentials Banner */}
-          {authMode === 'signin' && (
-            <div className="p-3.5 bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 rounded-xl text-start text-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-amber-500" />
-                  <span>{t.auth_quick_credentials_banner}</span>
-                </span>
-                <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-mono">
-                  Supabase Auth
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 font-mono text-[11px] bg-white/70 dark:bg-neutral-800/70 p-2 rounded-lg border border-amber-200/60 dark:border-amber-900/40 text-neutral-800 dark:text-neutral-200">
-                <div>
-                  <span className="text-neutral-400 block text-[9px] font-sans">
-                    {t.auth_email}:
-                  </span>
-                  <span className="font-black text-amber-600 dark:text-amber-400">admin@dzprint.dz</span>
-                </div>
-                <div>
-                  <span className="text-neutral-400 block text-[9px] font-sans">
-                    {t.auth_password}:
-                  </span>
-                  <span className="font-black text-amber-600 dark:text-amber-400">admin123</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleQuickAdminLogin}
-                disabled={isLoading}
-                className="w-full py-2 bg-amber-500 hover:bg-amber-600 active:scale-98 text-white font-bold text-xs rounded-lg transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{t.auth_quick_login_button}</span>
-              </button>
-            </div>
-          )}
 
           {authSuccess && (
             <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-medium flex items-center gap-2">
@@ -312,7 +304,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBackToStore }) => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@dzprint.dz"
+                placeholder="store-owner@dzprint.dz"
                 className="w-full px-3.5 py-2.5 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-hidden focus:border-amber-500 text-neutral-900 dark:text-white font-medium"
               />
             </div>
@@ -404,7 +396,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onBackToStore }) => {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[11px] text-neutral-400">
-                {user?.email || profile?.email || 'admin@dzprint.dz'}
+                {user?.email || profile?.email || ''}
               </span>
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                 <DbIcon className="w-2.5 h-2.5" />

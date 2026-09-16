@@ -17,6 +17,8 @@ interface AuthContextType {
   loading: boolean;
   profile: Profile | null;
   store: Store | null;
+  isAuthenticated: boolean;
+  role: Profile['role'] | null;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (params: SignUpParams) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -40,12 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!currentSession?.user) {
       setProfile(null);
       setStore(null);
-      setAdminToken(null);
       return;
     }
 
     const token = currentSession.access_token;
-    setAdminToken(token);
 
     try {
       // Call server to fetch authenticated profile & store
@@ -135,7 +135,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setProfile(null);
         setStore(null);
-        setAdminToken(null);
       }
       setLoading(false);
     });
@@ -179,9 +178,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: data.error || 'Failed to sign in' };
       }
 
-      if (data.token) {
-        setAdminToken(data.token);
-      }
       if (data.user) setUser(data.user);
       if (data.profile) setProfile(data.profile);
       if (data.store) setStore(data.store);
@@ -249,9 +245,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: regData.error || 'Registration failed' };
       }
 
-      if (regData.token) {
-        setAdminToken(regData.token);
-      }
       if (regData.profile) setProfile(regData.profile);
       if (regData.store) setStore(regData.store);
       if (regData.user) setUser(regData.user);
@@ -274,7 +267,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
       setProfile(null);
       setStore(null);
-      setAdminToken(null);
     }
   };
 
@@ -360,6 +352,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         profile,
         store,
+        isAuthenticated: !!user,
+        role: profile?.role || null,
         signIn,
         signUp,
         signOut,

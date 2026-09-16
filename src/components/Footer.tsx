@@ -168,6 +168,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 تتبع حالة طلبيتي
               </button>
             </li>
+            <li className="pt-2 border-t border-neutral-200/50 dark:border-neutral-800/50">
+              <button onClick={() => onNavigate('admin')} className="hover:text-amber-500 text-neutral-400 hover:underline">
+                بوابة إدارة المتجر (Store Portal)
+              </button>
+            </li>
           </ul>
         </div>
 

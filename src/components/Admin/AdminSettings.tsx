@@ -40,6 +40,15 @@ const ARABIC_FONTS = [
   { id: 'Tajawal', name: 'خط تجوال (Tajawal)', desc_ar: 'ناعم ومتناسق جداً', desc_fr: 'Fluide et harmonieuse', desc_en: 'Smooth soft harmonious font' },
 ];
 
+const PRESET_COLORS = [
+  { name: 'أسود كلاسيكي', value: '#111827' },
+  { name: 'عنبري دافئ', value: '#d97706' },
+  { name: 'أزرق داكن', value: '#1e40af' },
+  { name: 'رمادي محايد', value: '#4b5563' },
+  { name: 'أخضر زمردي', value: '#059669' },
+  { name: 'أحمر أنيق', value: '#dc2626' },
+];
+
 export const AdminSettings: React.FC = () => {
   const { t, language, isRtl } = useTheme();
   const { updateLocalSettings, refreshSettings } = useSiteSettings();
@@ -681,7 +690,7 @@ function appendOrderRow(sheet, o) {
                         {font.name}
                       </div>
                       <div className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">
-                        {font.desc}
+                        {language === 'fr' ? font.desc_fr : language === 'en' ? font.desc_en : font.desc_ar}
                       </div>
                     </button>
                   );

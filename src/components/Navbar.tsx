@@ -7,7 +7,6 @@ import {
   Truck,
   ShieldCheck,
   Search,
-  Lock,
   Menu,
   X,
 } from 'lucide-react';
@@ -139,20 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="p-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
             title="تبديل الوضع الليلي / النهاري"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-          </button>
-
-          {/* Admin shortcut */}
-          <button
-            onClick={() => onNavigate('admin')}
-            className={`p-2 rounded-xl transition ${
-              currentView === 'admin'
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-            title="لوحة تحكم الإدارة"
-          >
-            <Lock className="w-4 h-4" />
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-600" />}
           </button>
 
           {/* Cart Drawer Trigger Button */}

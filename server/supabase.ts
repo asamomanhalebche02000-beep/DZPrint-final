@@ -107,7 +107,8 @@ export async function uploadStoreAssetToSupabaseStorage(
   fileBuffer: Buffer,
   fileName: string,
   mimeType: string,
-  assetType: 'logo' | 'favicon'
+  assetType: 'logo' | 'favicon',
+  storeId: string = 'store-dzprint-default'
 ): Promise<{ success: boolean; url?: string; storagePath?: string; error?: string }> {
   const client = getServerSupabase();
   const bucketName = 'store-assets';
@@ -120,7 +121,7 @@ export async function uploadStoreAssetToSupabaseStorage(
     return {
       success: true,
       url: fallbackUrl,
-      storagePath: `local-${assetType}-${Date.now()}`,
+      storagePath: `stores/${storeId}/branding/${assetType}-${Date.now()}`,
     };
   }
 
@@ -151,7 +152,7 @@ export async function uploadStoreAssetToSupabaseStorage(
   const rawExt = fileName.split('.').pop()?.toLowerCase();
   const ext = rawExt || (assetType === 'favicon' ? 'ico' : 'png');
   const cleanId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-  const storagePath = `branding/${assetType}-${cleanId}.${ext}`;
+  const storagePath = `stores/${storeId}/branding/${assetType}-${cleanId}.${ext}`;
 
   // Try upload to store-assets
   const { data, error } = await client.storage

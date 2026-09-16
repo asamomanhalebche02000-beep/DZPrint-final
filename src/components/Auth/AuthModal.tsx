@@ -208,7 +208,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@dzprint.dz"
+                placeholder="contact@dzprint.dz"
                 className="w-full ps-9 pe-3 py-2 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-hidden focus:border-amber-500 dark:text-white"
               />
             </div>
