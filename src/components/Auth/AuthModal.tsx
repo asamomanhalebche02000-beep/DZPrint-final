@@ -24,6 +24,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setError(null);
+      setSuccessMessage(null);
+    }
+  }, [isOpen, initialMode]);
+
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

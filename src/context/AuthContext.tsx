@@ -145,44 +145,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [fetchProfileAndStore]);
 
-  // Sign In
+  // Sign In - Uses Supabase Auth only
   const signIn = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      if (isSupabaseConfigured) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: pass.trim(),
-        });
-
-        if (error) {
-          return { success: false, error: error.message };
-        }
-
-        if (data.session) {
-          setSession(data.session);
-          setUser(data.user);
-          await fetchProfileAndStore(data.session);
-          return { success: true };
-        }
-      }
-
-      // Backend fallback endpoint if client-side Supabase credentials are missing or proxying
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password: pass.trim() }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: pass.trim(),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Failed to sign in' };
+      if (error) {
+        return { success: false, error: error.message };
       }
 
-      if (data.user) setUser(data.user);
-      if (data.profile) setProfile(data.profile);
-      if (data.store) setStore(data.store);
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        await fetchProfileAndStore(data.session);
+        return { success: true };
+      }
 
-      return { success: true };
+      return { success: false, error: 'Failed to sign in. No session returned.' };
     } catch (err: any) {
       return { success: false, error: err.message || 'An unexpected error occurred' };
     }
@@ -197,31 +179,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storeSlug,
   }: SignUpParams): Promise<{ success: boolean; error?: string }> => {
     try {
-      let createdUserId: string | null = null;
-      let accessToken: string | null = null;
-
-      if (isSupabaseConfigured) {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: password.trim(),
-          options: {
-            data: {
-              full_name: fullName.trim(),
-              store_name: storeName.trim(),
-              store_slug: storeSlug.trim(),
-            },
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            store_name: storeName.trim(),
+            store_slug: storeSlug.trim(),
           },
-        });
+        },
+      });
 
-        if (error) {
-          return { success: false, error: error.message };
-        }
-
-        if (data.user) {
-          createdUserId = data.user.id;
-          accessToken = data.session?.access_token || null;
-        }
+      if (error) {
+        return { success: false, error: error.message };
       }
+
+      const createdUserId = data.user?.id || null;
+      const accessToken = data.session?.access_token || null;
 
       // Complete Store & Profile provisioning securely on backend
       const res = await fetch('/api/auth/register-store', {
@@ -248,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (regData.profile) setProfile(regData.profile);
       if (regData.store) setStore(regData.store);
       if (regData.user) setUser(regData.user);
+      if (data.session) setSession(data.session);
 
       return { success: true };
     } catch (err: any) {

@@ -775,7 +775,7 @@ export const translations: Record<Language, Translations> = {
     contact_whatsapp: 'Contacter sur WhatsApp',
     order_via_whatsapp: 'Commander via WhatsApp',
 
-    auth_sign_in: 'Connexion',
+    auth_sign_in: 'Se connecter',
     auth_sign_up: 'Créer un compte',
     auth_create_account: 'Créer une boutique et un compte administrateur',
     auth_forgot_password: 'Mot de passe oublié ?',

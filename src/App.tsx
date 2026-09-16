@@ -88,12 +88,17 @@ function MainApp() {
     // handled inside CheckoutModal or tracking
   };
 
+  const [adminInitialTab, setAdminInitialTab] = useState<any>('orders');
+
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50/50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
       {/* Top Navbar */}
       <Navbar
         currentView={currentView}
-        onNavigate={view => {
+        onNavigate={(view, tab) => {
+          if (view === 'admin' && tab) {
+            setAdminInitialTab(tab);
+          }
           setCurrentView(view);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
@@ -131,7 +136,10 @@ function MainApp() {
         )}
 
         {currentView === 'admin' && (
-          <AdminView onBackToStore={() => setCurrentView('shop')} />
+          <AdminView
+            onBackToStore={() => setCurrentView('shop')}
+            initialTab={adminInitialTab}
+          />
         )}
       </main>
 
